@@ -1,0 +1,10 @@
+.git
+.Dockerfile
+.dockerignore
+node_modules
+npm-debug.log
+dist
+
+.husky
+README.md
+LICENSE
