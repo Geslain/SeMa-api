@@ -1,0 +1,21 @@
+#!/bin/sh
+. "$(dirname "$0")/_/husky.sh"
+
+source .env
+
+containerName=SeMa-api
+isRunning="$(docker ps -q -f name=$containerName)"
+if [ "$TEST_ON_COMMIT" = "true" ]
+then
+	if [ -z "$isRunning" ]
+	then
+	  echo "\n\033[31mPlease start docker container ($containerName) so test can run !\033[0m\n"
+	  exit 1
+	else
+	  npx lint-staged
+      docker exec SeMa-api yarn test
+      docker exec SeMa-api yarn test:e2e
+	fi
+else
+  npx lint-staged
+fi
