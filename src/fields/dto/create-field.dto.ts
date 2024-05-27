@@ -12,19 +12,19 @@ import { FieldType } from '../entities/field.entity';
 
 export class CreateFieldDto {
   @ApiProperty()
-  @IsString()
-  @MinLength(2, { message: 'Name must have at least 2 characters.' })
+  @MinLength(2)
   @IsNotEmpty()
+  @IsString()
   name: string;
 
   @ApiProperty()
-  @IsEnum(FieldType)
   @IsNotEmpty()
+  @IsEnum(FieldType)
   type: FieldType;
 
   @ApiProperty()
-  @IsNotEmpty()
   @IsArray({ message: 'You must provide an array of string' })
+  @IsNotEmpty()
   @ValidateIf((f) => f.type === FieldType.list)
   values: string[];
 }

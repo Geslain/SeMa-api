@@ -4,6 +4,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 
 import { User } from '../users/entities/user.entity';
+import { MissingUserError } from '../utils/errors';
 
 import { CreateFieldDto } from './dto/create-field.dto';
 import { UpdateFieldDto } from './dto/update-field.dto';
@@ -16,7 +17,15 @@ export class FieldsService {
     @Inject(REQUEST) private readonly request: Request,
   ) {}
 
+  missingUserHandler() {
+    if (!('user' in this.request)) {
+      throw new MissingUserError();
+    }
+  }
+
   create(createFieldDto: CreateFieldDto) {
+    this.missingUserHandler();
+
     if ('user' in this.request) {
       const owner = this.request.user as User;
 
@@ -29,45 +38,48 @@ export class FieldsService {
 
       return this.fieldRepository.save(field);
     }
-
-    throw new Error("You can't create field without owner");
   }
 
   findAll() {
+    this.missingUserHandler();
+
     if ('user' in this.request) {
       const owner = this.request.user as User;
       return this.fieldRepository.findBy({ owner });
     }
-    throw new Error("You can't get fields without an owner");
   }
 
   findOne(id: string) {
-    if ('user' in this.request) {
-      return this.fieldRepository.findOneBy({ id });
-    }
-    throw new Error("You can't get a field without an owner");
+    this.missingUserHandler();
+
+    return this.fieldRepository.findOneBy({ id });
   }
 
   async update(id: string, updateFieldDto: UpdateFieldDto) {
-    if ('user' in this.request) {
-      const field = await this.fieldRepository.findOneBy({ id });
-      const { name, values, type } = updateFieldDto;
+    this.missingUserHandler();
 
-      field.name = name;
-      field.values = values;
-      field.type = type;
+    const field = await this.fieldRepository.findOneBy({ id });
 
-      return this.fieldRepository.save(field);
-    }
+    if (!field) return null;
 
-    throw new Error("You can't update field without owner");
+    const { name, values, type } = updateFieldDto;
+
+    field.name = name;
+    field.values = values;
+    field.type = type;
+
+    return this.fieldRepository.save(field);
   }
 
   async remove(id: string) {
-    if ('user' in this.request) {
-      return this.fieldRepository.delete(id);
+    this.missingUserHandler();
+
+    const result = await this.fieldRepository.delete(id);
+
+    if (result.affected === 0) {
+      return null;
     }
 
-    throw new Error("You can't update field without owner");
+    return result;
   }
 }
