@@ -13,7 +13,7 @@ export class UsersService {
   ) {}
 
   create(createUserDto: CreateUserDto) {
-    const user: User = new User();
+    const user = new User();
 
     user.firstname = createUserDto.firstname;
     user.lastname = createUserDto.lastname;
@@ -27,7 +27,7 @@ export class UsersService {
     return this.userRepository.find();
   }
 
-  findOne(id: number) {
+  findOne(id: string) {
     return this.userRepository.findOneBy({ id });
   }
 
@@ -35,19 +35,26 @@ export class UsersService {
     return this.userRepository.findOneBy({ email });
   }
 
-  update(id: number, updateUserDto: UpdateUserDto) {
-    const user: User = new User();
+  async update(id: string, updateUserDto: UpdateUserDto) {
+    const user = await this.userRepository.findOneBy({ id });
+
+    if (!user) return null;
 
     user.firstname = updateUserDto.firstname;
     user.lastname = updateUserDto.lastname;
     user.email = updateUserDto.email;
     user.password = updateUserDto.password;
-    user.id = id;
 
     return this.userRepository.save(user);
   }
 
-  remove(id: number) {
-    return this.userRepository.delete(id);
+  async remove(id: string) {
+    const result = await this.userRepository.delete(id);
+
+    if (result.affected === 0) {
+      return null;
+    }
+
+    return result;
   }
 }

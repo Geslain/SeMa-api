@@ -1,11 +1,10 @@
+import { faker } from '@faker-js/faker';
 import { Test, TestingModule } from '@nestjs/testing';
 import { getRepositoryToken } from '@nestjs/typeorm';
 
 import { User } from './entities/user.entity';
-import { createMockedUser } from './helpers/test';
+import { userDtoFactory, userFactory } from './factories/user.factory';
 import { UsersService } from './users.service';
-
-const mockUser = createMockedUser(1);
 
 describe('UsersService', () => {
   let service: UsersService;
@@ -17,7 +16,7 @@ describe('UsersService', () => {
     delete: jest.fn(),
   };
 
-  const usersArray = [createMockedUser(1), createMockedUser(2)];
+  const usersArray = [userFactory.build(), userFactory.build()];
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
@@ -33,59 +32,144 @@ describe('UsersService', () => {
     service = module.get<UsersService>(UsersService);
   });
 
+  afterEach(() => {
+    jest.clearAllMocks();
+  });
+
   it('should be defined', () => {
     expect(service).toBeDefined();
   });
 
-  it('should insert a new user', async () => {
-    jest
-      .spyOn(mockUserRepository, 'save')
-      .mockImplementationOnce(() => Promise.resolve(mockUser as any));
-    const newUser = await service.create(mockUser);
-    expect(mockUserRepository.save).toHaveBeenCalledWith(mockUser);
-    expect(newUser).toEqual(mockUser);
-  });
+  describe('create()', () => {
+    it('should insert a new user', async () => {
+      const mockedUserDto = userDtoFactory.build();
+      const userId = faker.string.uuid();
+      jest.spyOn(mockUserRepository, 'save').mockImplementationOnce((user) => {
+        user.id = userId;
+        return Promise.resolve(user);
+      });
+      const newUser = await service.create(mockedUserDto);
 
-  it('should update an existing user', async () => {
-    const userId = 1;
-    jest.spyOn(mockUserRepository, 'save').mockResolvedValueOnce(mockUser);
-    const updatedUser = await service.update(userId, mockUser);
-    expect(mockUserRepository.save).toHaveBeenCalledWith(mockUser);
-    expect(updatedUser).toEqual(mockUser);
-  });
+      const savedUser = new User();
+      savedUser.email = mockedUserDto.email;
+      savedUser.firstname = mockedUserDto.firstname;
+      savedUser.lastname = mockedUserDto.lastname;
+      savedUser.password = mockedUserDto.password;
+      savedUser.id = userId;
 
-  it('should return an existing user (by id)', async () => {
-    const userId = 1;
-    jest.spyOn(mockUserRepository, 'findOneBy').mockResolvedValueOnce(mockUser);
-
-    const user = await service.findOne(userId);
-    expect(mockUserRepository.findOneBy).toHaveBeenCalledWith({ id: userId });
-    expect(user).toEqual(mockUser);
-  });
-
-  it('should return an existing user (by email)', async () => {
-    jest.spyOn(mockUserRepository, 'findOneBy').mockResolvedValueOnce(mockUser);
-
-    const user = await service.findOneByEmail(mockUser.email);
-    expect(mockUserRepository.findOneBy).toHaveBeenCalledWith({
-      email: mockUser.email,
+      expect(mockUserRepository.save).toHaveBeenNthCalledWith(1, savedUser);
+      expect(newUser.password).toEqual(mockedUserDto.password);
+      expect(newUser.firstname).toEqual(mockedUserDto.firstname);
+      expect(newUser.lastname).toEqual(mockedUserDto.lastname);
+      expect(newUser.email).toEqual(mockedUserDto.email);
+      expect(newUser.id).toBeDefined();
     });
-    expect(user).toEqual(mockUser);
   });
 
-  it('should return all users', async () => {
-    jest.spyOn(mockUserRepository, 'find').mockResolvedValueOnce(usersArray);
-    const users = await service.findAll();
-    expect(mockUserRepository.find).toHaveBeenCalled();
-    expect(users).toEqual(usersArray);
+  describe('update()', () => {
+    it('should return null', async () => {
+      const userId = faker.string.uuid();
+      const mockedUserDto = userDtoFactory.build();
+      jest.spyOn(mockUserRepository, 'findOneBy').mockResolvedValueOnce(null);
+
+      const updatedUser = await service.update(userId, mockedUserDto);
+
+      expect(updatedUser).toEqual(null);
+      expect(mockUserRepository.save).not.toHaveBeenCalled();
+    });
+
+    it('should update an existing user', async () => {
+      const userId = faker.string.uuid();
+      const mockedUser = userFactory.build({ id: userId });
+      const mockedUserDto = userDtoFactory.build();
+
+      jest
+        .spyOn(mockUserRepository, 'findOneBy')
+        .mockResolvedValueOnce(mockedUser);
+
+      jest
+        .spyOn(mockUserRepository, 'save')
+        .mockImplementationOnce((user) => Promise.resolve(user));
+
+      const updatedUser = await service.update(userId, mockedUserDto);
+
+      mockedUser.email = mockedUserDto.email;
+      mockedUser.firstname = mockedUserDto.firstname;
+      mockedUser.lastname = mockedUserDto.lastname;
+      mockedUser.password = mockedUserDto.password;
+
+      expect(mockUserRepository.save).toHaveBeenNthCalledWith(1, mockedUser);
+      expect(updatedUser.password).toEqual(mockedUserDto.password);
+      expect(updatedUser.firstname).toEqual(mockedUserDto.firstname);
+      expect(updatedUser.lastname).toEqual(mockedUserDto.lastname);
+      expect(updatedUser.email).toEqual(mockedUserDto.email);
+      expect(updatedUser.id).toEqual(userId);
+    });
   });
 
-  it('should remove an existing user', async () => {
-    const userId = 1;
-    jest.spyOn(mockUserRepository, 'delete').mockResolvedValueOnce(mockUser);
+  describe('findOne()', () => {
+    it('should return an existing user (by id)', async () => {
+      const userId = faker.string.uuid();
+      const mockedUser = userFactory.build();
 
-    const removedUser = await service.remove(userId);
-    expect(mockUserRepository.delete).toHaveBeenCalledWith(userId);
-    expect(removedUser).toEqual(mockUser);
+      jest
+        .spyOn(mockUserRepository, 'findOneBy')
+        .mockResolvedValueOnce(mockedUser);
+
+      const user = await service.findOne(userId);
+      expect(mockUserRepository.findOneBy).toHaveBeenCalledWith({ id: userId });
+      expect(user).toEqual(mockedUser);
+    });
+  });
+
+  describe('findOneByEmail()', () => {
+    it('should return an existing user (by email)', async () => {
+      const mockedUser = userFactory.build();
+
+      jest
+        .spyOn(mockUserRepository, 'findOneBy')
+        .mockResolvedValueOnce(mockedUser);
+
+      const user = await service.findOneByEmail(mockedUser.email);
+      expect(mockUserRepository.findOneBy).toHaveBeenCalledWith({
+        email: mockedUser.email,
+      });
+      expect(user).toEqual(mockedUser);
+    });
+  });
+
+  describe('findAll()', () => {
+    it('should return all users', async () => {
+      jest.spyOn(mockUserRepository, 'find').mockResolvedValueOnce(usersArray);
+      const users = await service.findAll();
+      expect(mockUserRepository.find).toHaveBeenCalled();
+      expect(users).toEqual(usersArray);
+    });
+  });
+
+  describe('delete()', () => {
+    it('should remove an existing user', async () => {
+      const userId = faker.string.uuid();
+
+      jest
+        .spyOn(mockUserRepository, 'delete')
+        .mockResolvedValueOnce({ raw: [], affected: 1 });
+
+      const removedUser = await service.remove(userId);
+      expect(mockUserRepository.delete).toHaveBeenCalledWith(userId);
+      expect(removedUser).toEqual({ raw: [], affected: 1 });
+    });
+
+    it('should remove return null', async () => {
+      const userId = faker.string.uuid();
+
+      jest
+        .spyOn(mockUserRepository, 'delete')
+        .mockResolvedValueOnce({ raw: [], affected: 0 });
+
+      const removedUser = await service.remove(userId);
+      expect(mockUserRepository.delete).toHaveBeenCalledWith(userId);
+      expect(removedUser).toEqual(null);
+    });
   });
 });

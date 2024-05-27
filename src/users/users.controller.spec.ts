@@ -1,19 +1,20 @@
+import { faker } from '@faker-js/faker';
 import { Test, TestingModule } from '@nestjs/testing';
 
-import { CreateUserDto } from './dto/create-user.dto';
-import { UpdateUserDto } from './dto/update-user.dto';
-import { createMockedUser } from './helpers/test';
+import { userDtoFactory, userFactory } from './factories/user.factory';
 import { UsersController } from './users.controller';
 import { UsersService } from './users.service';
 
 describe('UsersController', () => {
   let controller: UsersController;
   let service: UsersService;
-
-  const createUserDto: CreateUserDto = createMockedUser(1);
-  const updateUserDto: UpdateUserDto = createMockedUser(11);
-  const userId = '123';
-  const mockedUser = createMockedUser(+userId, true);
+  const mockedUserService = {
+    findAll: jest.fn(),
+    create: jest.fn(),
+    update: jest.fn(),
+    findOne: jest.fn(),
+    remove: jest.fn(),
+  };
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
@@ -21,19 +22,7 @@ describe('UsersController', () => {
       providers: [
         {
           provide: UsersService,
-          useValue: {
-            findAll: jest
-              .fn()
-              .mockResolvedValue([
-                createMockedUser(1),
-                createMockedUser(2),
-                createMockedUser(3),
-              ]),
-            create: jest.fn().mockResolvedValue(createUserDto),
-            update: jest.fn().mockResolvedValue(updateUserDto),
-            findOne: jest.fn().mockResolvedValue(mockedUser),
-            remove: jest.fn().mockResolvedValue(mockedUser),
-          },
+          useValue: mockedUserService,
         },
       ],
     }).compile();
@@ -48,52 +37,73 @@ describe('UsersController', () => {
 
   describe('create()', () => {
     it('should create a new user', async () => {
+      const createUserDto = userDtoFactory.build();
+      const mockedUser = userFactory.build();
       const createSpy = jest
         .spyOn(service, 'create')
-        .mockResolvedValueOnce(createMockedUser(1) as any);
+        .mockResolvedValueOnce(mockedUser);
 
-      await controller.create(createUserDto);
+      const user = await controller.create(createUserDto);
       expect(createSpy).toHaveBeenCalledWith(createUserDto);
+      expect(user).toEqual(mockedUser);
     });
   });
 
   describe('update()', () => {
     it('should update an user', async () => {
+      const userId = faker.string.uuid();
+      const mockedUser = userFactory.build();
+      const updateUserDto = userDtoFactory.build();
       const updateSpy = jest
         .spyOn(service, 'update')
-        .mockResolvedValueOnce(createMockedUser(123) as any);
+        .mockResolvedValueOnce(mockedUser);
 
-      await controller.update('123', updateUserDto);
-      expect(updateSpy).toHaveBeenCalledWith(123, updateUserDto);
+      const user = await controller.update(userId, updateUserDto);
+      expect(updateSpy).toHaveBeenCalledWith(userId, updateUserDto);
+      expect(user).toEqual(mockedUser);
     });
   });
 
   describe('findAll()', () => {
     it('should return an array of users', async () => {
-      await expect(controller.findAll()).resolves.toEqual([
-        createMockedUser(1),
-        createMockedUser(2),
-        createMockedUser(3),
-      ]);
-      expect(service.findAll).toHaveBeenCalled();
+      const mockedUsers = [userFactory.build(), userFactory.build()];
+
+      const findAllSpy = jest
+        .spyOn(service, 'findAll')
+        .mockResolvedValueOnce(mockedUsers);
+
+      const users = await controller.findAll();
+      expect(findAllSpy).toHaveBeenCalledWith();
+      expect(users).toEqual(mockedUsers);
     });
   });
 
   describe('findOne()', () => {
     it('should return a user get by id parameter', async () => {
-      await expect(controller.findOne(userId)).resolves.toEqual(
-        createMockedUser(+userId, true),
-      );
-      expect(service.findOne).toHaveBeenCalledWith(+userId);
+      const userId = faker.string.uuid();
+      const mockedUser = userFactory.build();
+
+      const findOneSpy = jest
+        .spyOn(service, 'findOne')
+        .mockResolvedValueOnce(mockedUser);
+
+      const user = await controller.findOne(userId);
+      expect(findOneSpy).toHaveBeenCalledWith(userId);
+      expect(user).toEqual(mockedUser);
     });
   });
 
   describe('remove()', () => {
     it('should return a user get by id parameter', async () => {
-      await expect(controller.remove(userId)).resolves.toEqual(
-        createMockedUser(+userId, true),
-      );
-      expect(service.remove).toHaveBeenCalledWith(+userId);
+      const userId = faker.string.uuid();
+
+      const findOneSpy = jest
+        .spyOn(service, 'remove')
+        .mockResolvedValueOnce(null);
+
+      const result = await controller.remove(userId);
+      expect(findOneSpy).toHaveBeenCalledWith(userId);
+      expect(result).toEqual(null);
     });
   });
 });

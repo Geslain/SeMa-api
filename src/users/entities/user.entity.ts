@@ -1,12 +1,12 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { Column, Entity, PrimaryGeneratedColumn } from 'typeorm';
+import { Exclude } from 'class-transformer';
+import { Column, Entity, OneToMany } from 'typeorm';
+
+import { Field } from '../../fields/entities/field.entity';
+import { BaseEntity } from '../../utils/entities/base-entity.entity';
 
 @Entity()
-export class User {
-  @ApiProperty({ example: 1, description: "User's unique id" })
-  @PrimaryGeneratedColumn()
-  id: number;
-
+export class User extends BaseEntity {
   @ApiProperty({ example: 'Lullaby', description: "User's firstname" })
   @Column({ type: 'varchar' })
   firstname: string;
@@ -24,5 +24,12 @@ export class User {
 
   @ApiProperty({ example: '1234567890', description: "User's password" })
   @Column({ type: 'varchar' })
+  @Exclude()
   password: string;
+
+  @ApiProperty({
+    description: 'User created fields',
+  })
+  @OneToMany(() => Field, (field) => field.owner)
+  fields: Field[];
 }

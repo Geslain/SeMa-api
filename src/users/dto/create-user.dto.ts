@@ -8,28 +8,27 @@ import {
 } from 'class-validator';
 
 const passwordRegEx =
-  /^(?=.*[a-z])(?=.*[A-Z])(?=.*d)(?=.*[@$!%*?&])[A-Za-zd@$!%*?&]{8,20}$/;
+  /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,20}$/;
 
 export class CreateUserDto {
   @ApiProperty()
+  @MinLength(2)
   @IsString()
-  @MinLength(2, { message: 'Name must have at least 2 characters.' })
   @IsNotEmpty()
   firstname: string;
 
   @ApiProperty()
+  @MinLength(2)
   @IsString()
-  @MinLength(2, { message: 'Name must have at least 2 characters.' })
   @IsNotEmpty()
   lastname: string;
 
   @ApiProperty()
+  @IsEmail()
   @IsNotEmpty()
-  @IsEmail(null, { message: 'Please provide valid Email.' })
   email: string;
 
   @ApiProperty()
-  @IsNotEmpty()
   @Matches(passwordRegEx, {
     message: `Password must contain Minimum 8 and maximum 20 characters, 
     at least one uppercase letter, 
@@ -37,5 +36,6 @@ export class CreateUserDto {
     one number and 
     one special character`,
   })
+  @IsNotEmpty()
   password: string;
 }
