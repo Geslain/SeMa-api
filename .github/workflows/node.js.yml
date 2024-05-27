@@ -29,4 +29,5 @@ jobs:
       run: yarn --frozen-lockfile
     - run: yarn run build
     - run: yarn test
+    - run: cp .env.template .env
     - run: yarn test:e2e
