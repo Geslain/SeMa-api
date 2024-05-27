@@ -39,7 +39,6 @@ describe('FieldsController', () => {
     }).compile();
 
     controller = module.get<FieldsController>(FieldsController);
-    service = module.get<FieldsService>(FieldsService);
   });
 
   it('should be defined', () => {
