@@ -10,6 +10,7 @@ import { UsersModule } from './users/users.module';
 import { AuthModule } from './auth/auth.module';
 import { AuthGuard } from './auth/auth.guard';
 import { DataRowFieldModule } from './data-row-field/data-row-field.module';
+import { DataRowModule } from './data-row/data-row.module';
 
 @Module({
   imports: [
@@ -19,6 +20,7 @@ import { DataRowFieldModule } from './data-row-field/data-row-field.module';
     FieldsModule,
     AuthModule,
     DataRowFieldModule,
+    DataRowModule,
   ],
   controllers: [AppController],
   providers: [
