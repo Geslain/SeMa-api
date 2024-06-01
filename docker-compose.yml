@@ -9,7 +9,7 @@ services:
       - 5432:5432
     environment:
       POSTGRES_DB: $DATABASE_NAME
-      POSTGRES_USER: $DATABASE_USERNAME@
+      POSTGRES_USER: $DATABASE_USERNAME
       POSTGRES_PASSWORD: $DATABASE_PASSWORD
 
   adminer:
@@ -23,6 +23,7 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
+    image: sema-api
     container_name: SeMa-api
     environment:
       - DATABASE_NAME=${DATABASE_NAME}
@@ -32,9 +33,10 @@ services:
       - DATABASE_NAME=${DATABASE_HOST}
     ports:
       - ${API_PORT}:3000
-    depends_on:
-      - postgres
     volumes:
       - ./src:/app/src
       - ./test:/app/test
       #- ./node_modules:/app/node_modules
+    depends_on:
+      - postgres
+
