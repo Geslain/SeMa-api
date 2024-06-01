@@ -14,8 +14,9 @@ describe('User (e2e)', () => {
         .post('/users')
         .send(userParams);
 
+      const { firstname, lastname, email } = userParams;
       expect(response.status).toBe(201);
-      expect(response.body).toMatchObject(userParams);
+      expect(response.body).toMatchObject({ firstname, lastname, email });
       user = response.body;
     });
 
@@ -23,7 +24,7 @@ describe('User (e2e)', () => {
       const response = await request(global.app.getHttpServer()).get('/users');
 
       expect(response.status).toBe(200);
-      expect(response.body[0]).toEqual(user);
+      expect(response.body[1]).toEqual(user);
     });
 
     it('/users/:id (GET)', async () => {
@@ -36,10 +37,10 @@ describe('User (e2e)', () => {
     });
 
     it('/users/:id (PATCH)', async () => {
-      const updatedUserParams = userDtoFactory.build();
+      const { password, ...updatedUserParams } = userDtoFactory.build();
       const response = await request(global.app.getHttpServer())
         .patch(`/users/${user.id}`)
-        .send(updatedUserParams);
+        .send({ password, ...updatedUserParams });
 
       expect(response.status).toBe(200);
       expect(response.body).toMatchObject(updatedUserParams);
@@ -188,50 +189,45 @@ describe('User (e2e)', () => {
                 `${field} must be a string`,
               );
             });
+          });
+        });
 
-            describe('email', () => {
-              it(`Should check that email is well-formed`, async () => {
-                const response = await request(global.app.getHttpServer())
-                  [protocol](url)
-                  .send({ email: 'fakemail.com' });
+        describe('email', () => {
+          it(`Should check that email is well-formed`, async () => {
+            const response = await request(global.app.getHttpServer())
+              [protocol](url)
+              .send({ email: 'fakemail.com' });
 
-                expect(response.status).toBe(400);
-                expect(response.body.message).toContain(
-                  `email must be an email`,
-                );
-              });
-            });
+            expect(response.status).toBe(400);
+            expect(response.body.message).toContain(`email must be an email`);
+          });
+        });
 
-            describe('password', () => {
-              it(`Should check that password is well-formed`, async () => {
-                const badPasswordErrorMessage =
-                  'Password must contain Minimum 8 and maximum 20 characters, \n    at least one uppercase letter, \n    one lowercase letter, \n    one number and \n    one special character';
+        describe('password', () => {
+          it(`Should check that password is well-formed`, async () => {
+            const badPasswordErrorMessage =
+              'Password must contain Minimum 8 and maximum 20 characters, \n    at least one uppercase letter, \n    one lowercase letter, \n    one number and \n    one special character';
 
-                const tooShortPassword = 'Sh0rt!';
-                const tooLongPassword =
-                  'Thispasswordiswaytoolongforthesecurity1!';
-                const missingUpperCasePassword = 'foobar1!foo!';
-                const missingDigitPassword = 'Foobar!foo';
-                const missingSpecialCharPassword = 'Foobar1foo';
+            const tooShortPassword = 'Sh0rt!';
+            const tooLongPassword = 'Thispasswordiswaytoolongforthesecurity1!';
+            const missingUpperCasePassword = 'foobar1!foo!';
+            const missingDigitPassword = 'Foobar!foo';
+            const missingSpecialCharPassword = 'Foobar1foo';
 
-                for (const password of [
-                  tooShortPassword,
-                  tooLongPassword,
-                  missingUpperCasePassword,
-                  missingDigitPassword,
-                  missingSpecialCharPassword,
-                ]) {
-                  const response = await request(global.app.getHttpServer())
-                    [protocol](url)
-                    .send({ password });
+            for (const password of [
+              tooShortPassword,
+              tooLongPassword,
+              missingUpperCasePassword,
+              missingDigitPassword,
+              missingSpecialCharPassword,
+            ]) {
+              const response = await request(global.app.getHttpServer())
+                [protocol](url)
+                .send({ password });
 
-                  expect(response.status).toBe(400);
-                  expect(response.body.message).toContain(
-                    badPasswordErrorMessage,
-                  );
-                }
-              });
-            });
+              expect(response.status).toBe(400);
+              expect(response.body.message).toContain(badPasswordErrorMessage);
+            }
           });
         });
       });
