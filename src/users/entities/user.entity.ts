@@ -1,6 +1,7 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { Exclude } from 'class-transformer';
-import { Column, Entity, OneToMany } from 'typeorm';
+import * as bcrypt from 'bcrypt';
+import { BeforeInsert, Column, Entity, OneToMany } from 'typeorm';
 
 import { Field } from '../../fields/entities/field.entity';
 import { BaseEntity } from '../../utils/entities/base-entity.entity';
@@ -24,7 +25,7 @@ export class User extends BaseEntity {
 
   @ApiProperty({ example: '1234567890', description: "User's password" })
   @Column({ type: 'varchar' })
-  @Exclude()
+  @Exclude({ toPlainOnly: true })
   password: string;
 
   @ApiProperty({
@@ -32,4 +33,19 @@ export class User extends BaseEntity {
   })
   @OneToMany(() => Field, (field) => field.owner)
   fields: Field[];
+
+  /**
+   * Compare two string by encrypting the first one given as parameter
+   *
+   * @param candidatePassword
+   */
+  async comparePassword(candidatePassword: string) {
+    return bcrypt.compare(candidatePassword, this.password);
+  }
+
+  @BeforeInsert()
+  async hashPassword() {
+    const saltOrRounds = await bcrypt.genSalt(10);
+    this.password = await bcrypt.hash(this.password, saltOrRounds);
+  }
 }

@@ -9,14 +9,33 @@ export const userDtoFactory = Factory.define<CreateUserDto>(() => ({
   firstname: faker.person.firstName(),
   lastname: faker.person.lastName(),
   email: faker.internet.email(),
-  password: faker.internet.password({
-    length: 20,
-    pattern: /[A-Za-z\d@$!%*?&]/,
-  }),
+  password:
+    faker.internet.password({
+      length: 1,
+      pattern: /[A-Z]/,
+    }) +
+    faker.internet.password({
+      length: 1,
+      pattern: /[a-z]/,
+    }) +
+    faker.internet.password({
+      length: 1,
+      pattern: /\d/,
+    }) +
+    faker.internet.password({
+      length: 1,
+      pattern: /[@$!%*?&]/,
+    }) +
+    faker.internet.password({
+      length: 16,
+      pattern: /[A-Za-z\d@$!%*?&]/,
+    }),
 }));
 
-export const userFactory = Factory.define<User>(() => ({
-  ...baseEntityFactory.build(),
-  ...userDtoFactory.build(),
-  fields: [],
-}));
+export const userFactory = Factory.define<User>(() => {
+  return Object.assign(new User(), {
+    ...baseEntityFactory.build(),
+    ...userDtoFactory.build(),
+    fields: [],
+  });
+});
