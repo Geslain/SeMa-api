@@ -9,6 +9,7 @@ import { ProjectsModule } from './projects/projects.module';
 import { UsersModule } from './users/users.module';
 import { AuthModule } from './auth/auth.module';
 import { AuthGuard } from './auth/auth.guard';
+import { DataRowFieldModule } from './data-row-field/data-row-field.module';
 
 @Module({
   imports: [
@@ -17,6 +18,7 @@ import { AuthGuard } from './auth/auth.guard';
     ProjectsModule,
     FieldsModule,
     AuthModule,
+    DataRowFieldModule,
   ],
   controllers: [AppController],
   providers: [
