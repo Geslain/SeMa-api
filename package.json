@@ -19,7 +19,9 @@
     "test:debug": "node --inspect-brk -r tsconfig-paths/register -r ts-node/register node_modules/.bin/jest --runInBand",
     "test:e2e": "NODE_ENV=test jest --config ./test/jest-e2e.json --verbose --runInBand",
     "prepare": "husky",
-    "migrate": "DATABASE_HOST=localhost typeorm-ts-node-commonjs migration:generate -d ./src/datasource/datasource.ts"
+    "migraton:generate": "DATABASE_HOST=localhost DATABASE_PORT=5432 typeorm-ts-node-commonjs migration:generate -d ./src/datasource/datasource.ts",
+    "migration:run": "DATABASE_HOST=localhost DATABASE_PORT=5432 typeorm-ts-node-commonjs migration:run -d src/datasource/datasource.ts",
+    "migration:revert": "DATABASE_HOST=localhost DATABASE_PORT=5432 typeorm-ts-node-commonjs migration:revert -d src/datasource/datasource.ts"
   },
   "lint-staged": {
     "{src,test}/**/*.ts": [
