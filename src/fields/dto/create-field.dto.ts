@@ -9,22 +9,23 @@ import {
 } from 'class-validator';
 
 import { FieldType } from '../entities/field.entity';
+import { IsFieldValues } from '../../utils/decorators/is-field-values.decorator';
 
 export class CreateFieldDto {
   @ApiProperty()
   @MinLength(2)
-  @IsNotEmpty()
   @IsString()
+  @IsNotEmpty()
   name: string;
 
   @ApiProperty()
-  @IsNotEmpty()
   @IsEnum(FieldType)
+  @IsNotEmpty()
   type: FieldType;
 
   @ApiProperty()
+  @IsFieldValues()
   @IsArray({ message: 'You must provide an array of string' })
-  @IsNotEmpty()
-  @ValidateIf((f) => f.type === FieldType.list)
-  values: string[];
+  @ValidateIf((f) => f.type === FieldType.LIST)
+  values?: string[];
 }

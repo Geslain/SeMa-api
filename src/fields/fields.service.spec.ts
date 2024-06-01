@@ -5,6 +5,7 @@ import { faker } from '@faker-js/faker';
 
 import { userFactory } from '../users/factories/user.factory';
 import { MissingUserError } from '../utils/errors';
+import { UsersService } from '../users/users.service';
 
 import { fieldDtoFactory, fieldFactory } from './factories/field.factory';
 import { Field } from './entities/field.entity';
@@ -21,6 +22,10 @@ describe('FieldsService', () => {
     delete: jest.fn(),
   };
 
+  const mockUserService = {
+    findOneByEmail: jest.fn(),
+  };
+
   function createModule(requestMockValue = {}) {
     return Test.createTestingModule({
       providers: [
@@ -28,6 +33,10 @@ describe('FieldsService', () => {
         {
           provide: getRepositoryToken(Field),
           useValue: mockFieldRepository,
+        },
+        {
+          provide: UsersService,
+          useValue: mockUserService,
         },
         {
           provide: REQUEST,
@@ -67,6 +76,9 @@ describe('FieldsService', () => {
           field.id = fieldId;
           return Promise.resolve(field);
         });
+      jest
+        .spyOn(mockUserService, 'findOneByEmail')
+        .mockResolvedValueOnce(Promise.resolve(owner));
       const newField = await service.create(mockedFieldDto);
 
       const savedField = new Field();
@@ -88,7 +100,9 @@ describe('FieldsService', () => {
       const mockedFieldDto = fieldDtoFactory.build();
       service = (await createModule()).get<FieldsService>(FieldsService);
 
-      expect(() => service.create(mockedFieldDto)).toThrow(MissingUserError);
+      expect(() => service.create(mockedFieldDto)).rejects.toThrow(
+        MissingUserError,
+      );
     });
   });
 
@@ -99,6 +113,9 @@ describe('FieldsService', () => {
       jest
         .spyOn(mockFieldRepository, 'findOneBy')
         .mockResolvedValueOnce(Promise.resolve(null));
+      jest
+        .spyOn(mockUserService, 'findOneByEmail')
+        .mockResolvedValueOnce(Promise.resolve(owner));
 
       const updatedField = await service.update(fieldId, mockedFieldDto);
 
@@ -178,10 +195,10 @@ describe('FieldsService', () => {
     ];
     it('should return all fields', async () => {
       jest
-        .spyOn(mockFieldRepository, 'findBy')
+        .spyOn(mockFieldRepository, 'find')
         .mockResolvedValueOnce(fieldsArray);
       const fields = await service.findAll();
-      expect(mockFieldRepository.findBy).toHaveBeenCalled();
+      expect(mockFieldRepository.find).toHaveBeenCalled();
       expect(fields).toEqual(fieldsArray);
     });
 

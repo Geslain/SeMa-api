@@ -5,9 +5,9 @@ import { User } from '../../users/entities/user.entity';
 import { BaseEntity } from '../../utils/entities/base-entity.entity';
 
 export enum FieldType {
-  'text',
-  'date',
-  'list',
+  TEXT = 'text',
+  DATE = 'date',
+  LIST = 'list',
 }
 
 @Entity()
@@ -23,7 +23,10 @@ export class Field extends BaseEntity {
     example: 'Text',
     description: 'The type of the',
   })
-  @Column({ type: 'enum', enum: FieldType })
+  @Column('enum', {
+    enum: FieldType,
+    default: FieldType.TEXT,
+  })
   type: FieldType;
 
   @ApiProperty({
@@ -31,11 +34,14 @@ export class Field extends BaseEntity {
     description: 'Value of field in case field type is "list"',
   })
   @Column('text', { array: true })
-  values: string[];
+  values?: string[];
 
   @ApiProperty({
     description: "Field's owner",
   })
-  @ManyToOne(() => User, (user) => user.fields)
+  @ManyToOne(() => User, (user) => user.fields, {
+    nullable: false,
+    eager: true,
+  })
   owner: User;
 }

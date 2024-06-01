@@ -5,6 +5,7 @@ import { Repository } from 'typeorm';
 
 import { User } from '../users/entities/user.entity';
 import { MissingUserError } from '../utils/errors';
+import { UsersService } from '../users/users.service';
 
 import { CreateFieldDto } from './dto/create-field.dto';
 import { UpdateFieldDto } from './dto/update-field.dto';
@@ -14,6 +15,7 @@ import { Field } from './entities/field.entity';
 export class FieldsService {
   constructor(
     @InjectRepository(Field) private fieldRepository: Repository<Field>,
+    @Inject(UsersService) private userService: UsersService,
     @Inject(REQUEST) private readonly request: Request,
   ) {}
 
@@ -23,11 +25,12 @@ export class FieldsService {
     }
   }
 
-  create(createFieldDto: CreateFieldDto) {
+  async create(createFieldDto: CreateFieldDto) {
     this.missingUserHandler();
 
     if ('user' in this.request) {
-      const owner = this.request.user as User;
+      const { username } = this.request.user as { username: string };
+      const owner = await this.userService.findOneByEmail(username);
 
       const { name, values, type } = createFieldDto;
       const field = new Field();
@@ -45,7 +48,16 @@ export class FieldsService {
 
     if ('user' in this.request) {
       const owner = this.request.user as User;
-      return this.fieldRepository.findBy({ owner });
+      return this.fieldRepository.find({
+        where: {
+          owner: {
+            id: owner.id,
+          },
+        },
+        relations: {
+          owner: true,
+        },
+      });
     }
   }
 

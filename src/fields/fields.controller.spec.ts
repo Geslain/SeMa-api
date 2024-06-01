@@ -31,6 +31,10 @@ describe('FieldsController', () => {
     service = module.get<FieldsService>(FieldsService);
   });
 
+  afterEach(() => {
+    jest.clearAllMocks();
+  });
+
   it('should be defined', () => {
     expect(controller).toBeDefined();
   });
