@@ -9,7 +9,7 @@ import {
 } from 'class-validator';
 
 import { FieldType } from '../entities/field.entity';
-import { IsFieldValues } from '../../utils/decorators/is-field-values.decorator';
+import { IsFieldValues } from '../../common/decorators/is-field-values.decorator';
 
 export class CreateFieldDto {
   @ApiProperty()

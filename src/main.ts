@@ -7,7 +7,9 @@ import { NestFactory, Reflector } from '@nestjs/core';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 
 import { AppModule } from './app.module';
-import { NotFoundInterceptor } from './utils/interceptors/not-found.interceptor';
+import { NotFoundInterceptor } from './common/interceptors/not-found.interceptor';
+import { BaseEntity } from './common/base-entity/base-entity.entity';
+import { Field } from './fields/entities/field.entity';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
@@ -23,7 +25,9 @@ async function bootstrap() {
     .setVersion('1.0')
     .build();
 
-  const document = SwaggerModule.createDocument(app, config);
+  const document = SwaggerModule.createDocument(app, config, {
+    extraModels: [BaseEntity, Field],
+  });
   SwaggerModule.setup('api', app, document);
 
   app.enableVersioning({

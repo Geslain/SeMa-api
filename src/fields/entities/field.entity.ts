@@ -2,7 +2,7 @@ import { ApiProperty } from '@nestjs/swagger';
 import { Column, Entity, ManyToOne } from 'typeorm';
 
 import { User } from '../../users/entities/user.entity';
-import { BaseEntity } from '../../utils/entities/base-entity.entity';
+import { BaseEntity } from '../../common/base-entity/base-entity.entity';
 
 export enum FieldType {
   TEXT = 'text',
@@ -22,6 +22,7 @@ export class Field extends BaseEntity {
   @ApiProperty({
     example: 'Text',
     description: 'The type of the',
+    enum: FieldType,
   })
   @Column('enum', {
     enum: FieldType,
@@ -33,7 +34,7 @@ export class Field extends BaseEntity {
     example: ['Blue', 'Green', 'Red'],
     description: 'Value of field in case field type is "list"',
   })
-  @Column('text', { array: true })
+  @Column('text', { array: true, nullable: true })
   values?: string[];
 
   @ApiProperty({
@@ -41,7 +42,7 @@ export class Field extends BaseEntity {
   })
   @ManyToOne(() => User, (user) => user.fields, {
     nullable: false,
-    eager: true,
+    onDelete: 'CASCADE',
   })
   owner: User;
 }

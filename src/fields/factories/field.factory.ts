@@ -3,7 +3,7 @@ import { faker } from '@faker-js/faker';
 
 import { CreateFieldDto } from '../dto/create-field.dto';
 import { Field, FieldType } from '../entities/field.entity';
-import { baseEntityFactory } from '../../utils/factories/base-entity.factory';
+import { baseEntityFactory } from '../../common/base-entity/base-entity.factory';
 import { userFactory } from '../../users/factories/user.factory';
 
 export const fieldDtoFactory = Factory.define<CreateFieldDto>(({ params }) => {

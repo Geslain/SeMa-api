@@ -10,7 +10,7 @@ import { PostgreSqlContainer } from '@testcontainers/postgresql';
 import * as request from 'supertest';
 
 import { AppModule } from '../../src/app.module';
-import { NotFoundInterceptor } from '../../src/utils/interceptors/not-found.interceptor';
+import { NotFoundInterceptor } from '../../src/common/interceptors/not-found.interceptor';
 import { userFactory } from '../../src/users/factories/user.factory';
 import { AuthGuard } from '../../src/auth/auth.guard';
 

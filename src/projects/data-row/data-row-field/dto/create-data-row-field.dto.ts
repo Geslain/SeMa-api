@@ -1,9 +1,14 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { IsNotEmpty, IsString } from 'class-validator';
 
-export class CreateProjectDto {
+export class CreateDataRowFieldDto {
   @ApiProperty()
   @IsString()
   @IsNotEmpty()
-  name: string;
+  value: string;
+
+  @ApiProperty()
+  @IsString()
+  @IsNotEmpty()
+  fieldId: string;
 }

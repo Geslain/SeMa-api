@@ -4,7 +4,8 @@ import * as bcrypt from 'bcrypt';
 import { BeforeInsert, Column, Entity, OneToMany } from 'typeorm';
 
 import { Field } from '../../fields/entities/field.entity';
-import { BaseEntity } from '../../utils/entities/base-entity.entity';
+import { BaseEntity } from '../../common/base-entity/base-entity.entity';
+import { Project } from '../../projects/entities/project.entity';
 
 @Entity()
 export class User extends BaseEntity {
@@ -30,9 +31,14 @@ export class User extends BaseEntity {
 
   @ApiProperty({
     description: 'User created fields',
+    type: Field,
+    isArray: true,
   })
   @OneToMany(() => Field, (field) => field.owner)
   fields: Field[];
+
+  @OneToMany(() => Project, (project) => project.owner, {})
+  projects: Project[];
 
   /**
    * Compare two string by encrypting the first one given as parameter

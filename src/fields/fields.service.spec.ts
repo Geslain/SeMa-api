@@ -4,7 +4,7 @@ import { getRepositoryToken } from '@nestjs/typeorm';
 import { faker } from '@faker-js/faker';
 
 import { userFactory } from '../users/factories/user.factory';
-import { MissingUserError } from '../utils/errors';
+import { MissingUserError } from '../common/errors';
 import { UsersService } from '../users/users.service';
 
 import { fieldDtoFactory, fieldFactory } from './factories/field.factory';

@@ -1,16 +1,16 @@
 import { Module } from '@nestjs/common';
-import { APP_GUARD } from '@nestjs/core';
+import { APP_GUARD, RouterModule } from '@nestjs/core';
 
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
-import { TypeOrmModule } from './datasource/datasource.module';
 import { FieldsModule } from './fields/fields.module';
 import { ProjectsModule } from './projects/projects.module';
 import { UsersModule } from './users/users.module';
 import { AuthModule } from './auth/auth.module';
 import { AuthGuard } from './auth/auth.guard';
-import { DataRowFieldModule } from './data-row-field/data-row-field.module';
-import { DataRowModule } from './data-row/data-row.module';
+import { TypeOrmModule } from './common/datasource/datasource.module';
+import { DataRowFieldModule } from './projects/data-row/data-row-field/data-row-field.module';
+import { DataRowModule } from './projects/data-row/data-row.module';
 
 @Module({
   imports: [
@@ -21,6 +21,24 @@ import { DataRowModule } from './data-row/data-row.module';
     AuthModule,
     DataRowFieldModule,
     DataRowModule,
+    RouterModule.register([
+      {
+        path: 'projects',
+        module: ProjectsModule,
+        children: [
+          {
+            path: '/:projectId/data-rows',
+            module: DataRowModule,
+            children: [
+              {
+                path: '/:dataRowId/data-row-fields',
+                module: DataRowFieldModule,
+              },
+            ],
+          },
+        ],
+      },
+    ]),
   ],
   controllers: [AppController],
   providers: [

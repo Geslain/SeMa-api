@@ -11,7 +11,7 @@ export const connectionSource = new DataSource({
   password: process.env.DATABASE_PASSWORD,
   database: process.env.DATABASE_NAME,
   logging: process.env.NODE_ENV !== 'test',
-  entities: [__dirname + '/../**/*.entity.{js,ts}'],
+  entities: [__dirname + '/../../**/*.entity.{js,ts}'],
   migrationsTableName: 'typeorm_migrations',
   migrations: [__dirname + '/../migrations/*.{js,ts}'],
   migrationsRun: true,

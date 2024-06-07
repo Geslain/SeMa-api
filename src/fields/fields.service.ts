@@ -3,74 +3,59 @@ import { REQUEST } from '@nestjs/core';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 
-import { User } from '../users/entities/user.entity';
-import { MissingUserError } from '../utils/errors';
 import { UsersService } from '../users/users.service';
+import { WithOwnerService } from '../common/WithOwnerService';
 
 import { CreateFieldDto } from './dto/create-field.dto';
 import { UpdateFieldDto } from './dto/update-field.dto';
 import { Field } from './entities/field.entity';
 
 @Injectable()
-export class FieldsService {
+export class FieldsService extends WithOwnerService {
   constructor(
     @InjectRepository(Field) private fieldRepository: Repository<Field>,
-    @Inject(UsersService) private userService: UsersService,
-    @Inject(REQUEST) private readonly request: Request,
-  ) {}
-
-  missingUserHandler() {
-    if (!('user' in this.request)) {
-      throw new MissingUserError();
-    }
+    @Inject(REQUEST) protected request: Request,
+    @Inject(UsersService) protected usersService: UsersService,
+  ) {
+    super(request, usersService);
   }
 
   async create(createFieldDto: CreateFieldDto) {
-    this.missingUserHandler();
+    const { name, values, type } = createFieldDto;
+    const field = new Field();
+    field.name = name;
+    field.values = values;
+    field.type = type;
+    field.owner = await this.getOwner();
 
-    if ('user' in this.request) {
-      const { username } = this.request.user as { username: string };
-      const owner = await this.userService.findOneByEmail(username);
-
-      const { name, values, type } = createFieldDto;
-      const field = new Field();
-      field.name = name;
-      field.values = values;
-      field.type = type;
-      field.owner = owner;
-
-      return this.fieldRepository.save(field);
-    }
+    return this.fieldRepository.save(field);
   }
 
-  findAll() {
-    this.missingUserHandler();
-
-    if ('user' in this.request) {
-      const owner = this.request.user as User;
-      return this.fieldRepository.find({
-        where: {
-          owner: {
-            id: owner.id,
-          },
+  async findAll() {
+    const { id: ownerId } = await this.getOwner();
+    return this.fieldRepository.find({
+      where: {
+        owner: {
+          id: ownerId,
         },
-        relations: {
-          owner: true,
-        },
-      });
-    }
+      },
+      relations: {
+        owner: true,
+      },
+    });
   }
 
-  findOne(id: string) {
-    this.missingUserHandler();
-
-    return this.fieldRepository.findOneBy({ id });
+  async findOne(id: string) {
+    const { id: ownerId } = await this.getOwner();
+    return this.fieldRepository.findOneBy({ id, owner: { id: ownerId } });
   }
 
   async update(id: string, updateFieldDto: UpdateFieldDto) {
-    this.missingUserHandler();
-
-    const field = await this.fieldRepository.findOneBy({ id });
+    const { id: ownerId } = await this.getOwner();
+    const field = await this.fieldRepository.findOneBy({
+      id,
+      owner: { id: ownerId },
+    });
 
     if (!field) return null;
 
@@ -84,9 +69,11 @@ export class FieldsService {
   }
 
   async remove(id: string) {
-    this.missingUserHandler();
-
-    const result = await this.fieldRepository.delete(id);
+    const { id: ownerId } = await this.getOwner();
+    const result = await this.fieldRepository.delete({
+      id,
+      owner: { id: ownerId },
+    });
 
     if (result.affected === 0) {
       return null;

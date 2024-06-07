@@ -1,4 +1,3 @@
-import { faker } from '@faker-js/faker';
 import { ApiProperty } from '@nestjs/swagger';
 import {
   CreateDateColumn,
@@ -8,21 +7,21 @@ import {
 
 export abstract class BaseEntity {
   @ApiProperty({
-    example: faker.string.uuid(),
+    example: 'd13f7357-a2f4-4043-a5b7-7c9617c66e8d',
     description: "Entity's unique id",
   })
   @PrimaryGeneratedColumn('uuid')
   id: string;
 
   @ApiProperty({
-    example: faker.date.past(),
+    example: '2024-05-30 17:08:03.503496',
     description: "Entity's create date",
   })
   @CreateDateColumn()
   created_at: Date;
 
   @ApiProperty({
-    example: faker.date.recent(),
+    example: '2024-05-30 17:08:03.503496',
     description: "Entity's update date",
   })
   @UpdateDateColumn()

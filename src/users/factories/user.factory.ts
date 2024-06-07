@@ -3,7 +3,7 @@ import { Factory } from 'fishery';
 
 import { CreateUserDto } from '../dto/create-user.dto';
 import { User } from '../entities/user.entity';
-import { baseEntityFactory } from '../../utils/factories/base-entity.factory';
+import { baseEntityFactory } from '../../common/base-entity/base-entity.factory';
 
 export const userDtoFactory = Factory.define<CreateUserDto>(() => ({
   firstname: faker.person.firstName(),

@@ -11,5 +11,6 @@ import { FieldsService } from './fields.service';
   imports: [TypeOrmModule.forFeature([Field]), UsersModule],
   controllers: [FieldsController],
   providers: [FieldsService],
+  exports: [FieldsService],
 })
 export class FieldsModule {}
