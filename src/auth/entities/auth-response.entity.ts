@@ -11,7 +11,7 @@ export class AuthResponse {
   accessToken: string;
 
   @ApiProperty({
-    example: User,
+    example: 'User', // Todo Fix swagger
     description: 'Authenticated user',
   })
   user: User;
