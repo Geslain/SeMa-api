@@ -4,7 +4,7 @@ import { Reflector } from '@nestjs/core';
 import { JwtService } from '@nestjs/jwt';
 
 import { AuthGuard } from './auth.guard';
-import { jwtConstants } from './constants';
+import { jwtConstants } from './auth.constants';
 
 describe('AuthGuard', () => {
   let authGuard: AuthGuard;
