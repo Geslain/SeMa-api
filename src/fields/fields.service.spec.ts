@@ -21,7 +21,7 @@ describe('FieldsService', () => {
   };
   const owner = userFactory.build();
 
-  beforeAll(async () => {
+  beforeEach(async () => {
     const module = await Test.createTestingModule({
       providers: [
         FieldsService,

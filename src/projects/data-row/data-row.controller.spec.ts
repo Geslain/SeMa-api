@@ -5,11 +5,18 @@ import { DataRowService } from './data-row.service';
 
 describe('DataRowController', () => {
   let controller: DataRowController;
+  const mockedDataRowService = {
+    findAll: jest.fn(),
+    create: jest.fn(),
+    update: jest.fn(),
+    findOne: jest.fn(),
+    remove: jest.fn(),
+  };
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
       controllers: [DataRowController],
-      providers: [DataRowService],
+      providers: [{ provide: DataRowService, useValue: mockedDataRowService }],
     }).compile();
 
     controller = module.get<DataRowController>(DataRowController);
