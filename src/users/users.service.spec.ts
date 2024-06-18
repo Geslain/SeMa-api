@@ -2,19 +2,15 @@ import { faker } from '@faker-js/faker';
 import { Test, TestingModule } from '@nestjs/testing';
 import { getRepositoryToken } from '@nestjs/typeorm';
 
+import { mockRepository } from '../common/tests/mock-repository';
+
 import { User } from './entities/user.entity';
 import { userDtoFactory, userFactory } from './factories/user.factory';
 import { UsersService } from './users.service';
 
 describe('UsersService', () => {
   let service: UsersService;
-  const mockUserRepository = {
-    save: jest.fn(),
-    find: jest.fn(),
-    findOne: jest.fn(),
-    findOneBy: jest.fn(),
-    delete: jest.fn(),
-  };
+  const mockUserRepository = mockRepository();
 
   const usersArray = [userFactory.build(), userFactory.build()];
 
