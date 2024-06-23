@@ -1,6 +1,6 @@
 import { BadRequestException, Inject, Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { QueryFailedError, Repository } from 'typeorm';
 
 import { FieldsService } from '../../fields/fields.service';
 import { ProjectsService } from '../projects.service';
@@ -86,7 +86,15 @@ export class DataRowService {
         existingDataRow.value = dataRowField.value;
         await this.dataRowFieldsService.update(id, dataRowField);
       } else {
-        await this.dataRowFieldsService.create(id, dataRowField);
+        try {
+          await this.dataRowFieldsService.create(id, dataRowField);
+        } catch (e) {
+          if (e instanceof QueryFailedError) {
+            throw new BadRequestException(
+              `Field with id ${dataRowField.fieldId} does not exists`,
+            );
+          }
+        }
       }
     }
 
