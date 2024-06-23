@@ -21,7 +21,7 @@ export class DataRowFieldService {
   }
 
   findAll(dataRowId: string) {
-    return this.dataRowFieldRepository.findOneBy({
+    return this.dataRowFieldRepository.findBy({
       dataRow: { id: dataRowId },
     });
   }
@@ -41,6 +41,8 @@ export class DataRowFieldService {
       field: { id: updateDataRowFieldDto.fieldId },
       dataRow: { id: dataRowId },
     });
+
+    if (!dataRowField) return null;
 
     dataRowField.value = updateDataRowFieldDto.value;
 
