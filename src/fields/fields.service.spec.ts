@@ -3,11 +3,11 @@ import { Test } from '@nestjs/testing';
 import { getRepositoryToken } from '@nestjs/typeorm';
 import { faker } from '@faker-js/faker';
 
-import { userFactory } from '../users/factories/user.factory';
+import { usersFactory } from '../users/factories/users.factory';
 import { UsersService } from '../users/users.service';
 import { mockRepository } from '../common/tests/mock-repository';
 
-import { fieldDtoFactory, fieldFactory } from './factories/field.factory';
+import { fieldsDtoFactory, fieldsFactory } from './factories/fields.factory';
 import { Field } from './entities/field.entity';
 import { FieldsService } from './fields.service';
 
@@ -19,7 +19,7 @@ describe('FieldsService', () => {
   const mockUserService = {
     findOneByEmail: jest.fn(),
   };
-  const owner = userFactory.build();
+  const owner = usersFactory.build();
 
   beforeEach(async () => {
     const module = await Test.createTestingModule({
@@ -61,7 +61,7 @@ describe('FieldsService', () => {
     });
 
     it('should insert a new field', async () => {
-      const mockedFieldDto = fieldDtoFactory.build();
+      const mockedFieldDto = fieldsDtoFactory.build();
       const fieldId = faker.string.uuid();
       jest
         .spyOn(mockFieldRepository, 'save')
@@ -97,7 +97,7 @@ describe('FieldsService', () => {
     });
     it('should return null', async () => {
       const fieldId = faker.string.uuid();
-      const mockedFieldDto = fieldDtoFactory.build();
+      const mockedFieldDto = fieldsDtoFactory.build();
       jest
         .spyOn(mockFieldRepository, 'findOneBy')
         .mockResolvedValueOnce(Promise.resolve(null));
@@ -114,8 +114,8 @@ describe('FieldsService', () => {
 
     it('should update an existing field', async () => {
       const fieldId = faker.string.uuid();
-      const mockedField = fieldFactory.build({ id: fieldId });
-      const mockedFieldDto = fieldDtoFactory.build();
+      const mockedField = fieldsFactory.build({ id: fieldId });
+      const mockedFieldDto = fieldsDtoFactory.build();
 
       jest
         .spyOn(mockFieldRepository, 'findOneBy')
@@ -144,7 +144,7 @@ describe('FieldsService', () => {
   describe('findOne()', () => {
     it('should return an existing field (by id)', async () => {
       const fieldId = faker.string.uuid();
-      const mockedField = fieldFactory.build({ id: fieldId, owner });
+      const mockedField = fieldsFactory.build({ id: fieldId, owner });
 
       jest
         .spyOn(mockFieldRepository, 'findOneBy')
@@ -162,9 +162,9 @@ describe('FieldsService', () => {
 
   describe('findAll()', () => {
     const fieldsArray = [
-      fieldFactory.build(),
-      fieldFactory.build(),
-      fieldFactory.build(),
+      fieldsFactory.build(),
+      fieldsFactory.build(),
+      fieldsFactory.build(),
     ];
     it('should return all fields', async () => {
       jest

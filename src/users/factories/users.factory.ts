@@ -5,7 +5,7 @@ import { CreateUserDto } from '../dto/create-user.dto';
 import { User } from '../entities/user.entity';
 import { baseEntityFactory } from '../../common/base-entity/base-entity.factory';
 
-export const userDtoFactory = Factory.define<CreateUserDto>(() => ({
+export const usersDtoFactory = Factory.define<CreateUserDto>(() => ({
   firstname: faker.person.firstName(),
   lastname: faker.person.lastName(),
   email: faker.internet.email(),
@@ -32,10 +32,10 @@ export const userDtoFactory = Factory.define<CreateUserDto>(() => ({
     }),
 }));
 
-export const userFactory = Factory.define<User>(() => {
+export const usersFactory = Factory.define<User>(() => {
   return Object.assign(new User(), {
     ...baseEntityFactory.build(),
-    ...userDtoFactory.build(),
+    ...usersDtoFactory.build(),
     fields: [],
   });
 });

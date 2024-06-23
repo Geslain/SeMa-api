@@ -2,10 +2,10 @@ import { faker } from '@faker-js/faker';
 import * as request from 'supertest';
 
 import { Field, FieldType } from '../src/fields/entities/field.entity';
-import { fieldDtoFactory } from '../src/fields/factories/field.factory';
+import { fieldsDtoFactory } from '../src/fields/factories/fields.factory';
 
 describe('Field (e2e)', () => {
-  const fieldParams = fieldDtoFactory.build();
+  const fieldParams = fieldsDtoFactory.build();
   let field;
 
   describe('Successful CRUD test', () => {
@@ -36,7 +36,7 @@ describe('Field (e2e)', () => {
     });
 
     it('/fields/:id (PATCH)', async () => {
-      const updatedFieldParams = fieldDtoFactory.build();
+      const updatedFieldParams = fieldsDtoFactory.build();
       const response = await request(global.app.getHttpServer())
         .patch(`/fields/${field.id}`)
         .send(updatedFieldParams);
@@ -72,7 +72,7 @@ describe('Field (e2e)', () => {
     });
 
     it('/fields/:id (PATCH)', async () => {
-      const updatedFieldParams = fieldDtoFactory.build();
+      const updatedFieldParams = fieldsDtoFactory.build();
       const response = await request(global.app.getHttpServer())
         .patch(`/fields/1`)
         .send(updatedFieldParams);
@@ -101,7 +101,7 @@ describe('Field (e2e)', () => {
     });
 
     it('/fields/:id (PATCH)', async () => {
-      const updatedFieldParams = fieldDtoFactory.build();
+      const updatedFieldParams = fieldsDtoFactory.build();
       const response = await request(global.app.getHttpServer())
         .patch(`/fields/${faker.string.uuid()}`)
         .send(updatedFieldParams);
@@ -127,7 +127,7 @@ describe('Field (e2e)', () => {
           beforeEach(async () => {
             const response = await request(global.app.getHttpServer())
               .post('/fields')
-              .send(fieldDtoFactory.build());
+              .send(fieldsDtoFactory.build());
 
             url = `/fields/${response.body.id}`;
             field = response.body;
@@ -137,7 +137,7 @@ describe('Field (e2e)', () => {
             const response = await request(global.app.getHttpServer())
               [protocol](url)
               .send({
-                ...fieldDtoFactory.build(),
+                ...fieldsDtoFactory.build(),
                 createdAt: Date.now(),
                 id: faker.string.uuid(),
               });
@@ -202,7 +202,7 @@ describe('Field (e2e)', () => {
             );
 
             for (const [, value] of Object.entries(FieldType)) {
-              const fieldDto = fieldDtoFactory.build({ type: value });
+              const fieldDto = fieldsDtoFactory.build({ type: value });
               const response = await request(global.app.getHttpServer())
                 [protocol](url)
                 .send({
@@ -220,7 +220,7 @@ describe('Field (e2e)', () => {
             const response = await request(global.app.getHttpServer())
               [protocol](url)
               .send(
-                fieldDtoFactory.build({ type: FieldType.LIST, values: [] }),
+                fieldsDtoFactory.build({ type: FieldType.LIST, values: [] }),
               );
 
             expect(response.body.message).toContain(
@@ -235,7 +235,7 @@ describe('Field (e2e)', () => {
             )) {
               const response = await request(global.app.getHttpServer())
                 [protocol](url)
-                .send(fieldDtoFactory.build({ type: fieldType }));
+                .send(fieldsDtoFactory.build({ type: fieldType }));
 
               expect(response.status).toBe(protocol === 'post' ? 201 : 200);
             }
@@ -245,7 +245,7 @@ describe('Field (e2e)', () => {
             const response = await request(global.app.getHttpServer())
               [protocol](url)
               .send(
-                fieldDtoFactory.build({ type: FieldType.LIST, values: [] }),
+                fieldsDtoFactory.build({ type: FieldType.LIST, values: [] }),
               );
 
             expect(response.body.message).toContain(

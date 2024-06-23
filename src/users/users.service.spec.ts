@@ -5,14 +5,14 @@ import { getRepositoryToken } from '@nestjs/typeorm';
 import { mockRepository } from '../common/tests/mock-repository';
 
 import { User } from './entities/user.entity';
-import { userDtoFactory, userFactory } from './factories/user.factory';
+import { usersDtoFactory, usersFactory } from './factories/users.factory';
 import { UsersService } from './users.service';
 
 describe('UsersService', () => {
   let service: UsersService;
   const mockUserRepository = mockRepository();
 
-  const usersArray = [userFactory.build(), userFactory.build()];
+  const usersArray = [usersFactory.build(), usersFactory.build()];
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
@@ -38,7 +38,7 @@ describe('UsersService', () => {
 
   describe('create()', () => {
     it('should insert a new user', async () => {
-      const mockedUserDto = userDtoFactory.build();
+      const mockedUserDto = usersDtoFactory.build();
       const userId = faker.string.uuid();
       jest.spyOn(mockUserRepository, 'save').mockImplementationOnce((user) => {
         user.id = userId;
@@ -65,7 +65,7 @@ describe('UsersService', () => {
   describe('update()', () => {
     it('should return null', async () => {
       const userId = faker.string.uuid();
-      const mockedUserDto = userDtoFactory.build();
+      const mockedUserDto = usersDtoFactory.build();
       jest.spyOn(mockUserRepository, 'findOneBy').mockResolvedValueOnce(null);
 
       const updatedUser = await service.update(userId, mockedUserDto);
@@ -76,8 +76,8 @@ describe('UsersService', () => {
 
     it('should update an existing user', async () => {
       const userId = faker.string.uuid();
-      const mockedUser = userFactory.build({ id: userId });
-      const mockedUserDto = userDtoFactory.build();
+      const mockedUser = usersFactory.build({ id: userId });
+      const mockedUserDto = usersDtoFactory.build();
 
       jest
         .spyOn(mockUserRepository, 'findOneBy')
@@ -106,7 +106,7 @@ describe('UsersService', () => {
   describe('findOne()', () => {
     it('should return an existing user (by id)', async () => {
       const userId = faker.string.uuid();
-      const mockedUser = userFactory.build();
+      const mockedUser = usersFactory.build();
 
       jest
         .spyOn(mockUserRepository, 'findOneBy')
@@ -120,7 +120,7 @@ describe('UsersService', () => {
 
   describe('findOneByEmail()', () => {
     it('should return an existing user (by email)', async () => {
-      const mockedUser = userFactory.build();
+      const mockedUser = usersFactory.build();
 
       jest
         .spyOn(mockUserRepository, 'findOneBy')
@@ -156,7 +156,7 @@ describe('UsersService', () => {
       expect(removedUser).toEqual({ raw: [], affected: 1 });
     });
 
-    it('should remove return null', async () => {
+    it('should return null', async () => {
       const userId = faker.string.uuid();
 
       jest

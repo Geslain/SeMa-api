@@ -1,7 +1,7 @@
 import { faker } from '@faker-js/faker';
 import { Test, TestingModule } from '@nestjs/testing';
 
-import { fieldDtoFactory, fieldFactory } from './factories/field.factory';
+import { fieldsDtoFactory, fieldsFactory } from './factories/fields.factory';
 import { FieldsController } from './fields.controller';
 import { FieldsService } from './fields.service';
 
@@ -41,8 +41,8 @@ describe('FieldsController', () => {
 
   describe('create()', () => {
     it('should create a new field', async () => {
-      const createFieldDto = fieldDtoFactory.build();
-      const mockedField = fieldFactory.build();
+      const createFieldDto = fieldsDtoFactory.build();
+      const mockedField = fieldsFactory.build();
       const createSpy = jest
         .spyOn(service, 'create')
         .mockResolvedValueOnce(mockedField);
@@ -56,8 +56,8 @@ describe('FieldsController', () => {
   describe('update()', () => {
     it('should update an field', async () => {
       const fieldId = faker.string.uuid();
-      const mockedField = fieldFactory.build();
-      const updateFieldDto = fieldDtoFactory.build();
+      const mockedField = fieldsFactory.build();
+      const updateFieldDto = fieldsDtoFactory.build();
       const updateSpy = jest
         .spyOn(service, 'update')
         .mockResolvedValueOnce(mockedField);
@@ -70,7 +70,7 @@ describe('FieldsController', () => {
 
   describe('findAll()', () => {
     it('should return an array of fields', async () => {
-      const mockedFields = [fieldFactory.build(), fieldFactory.build()];
+      const mockedFields = [fieldsFactory.build(), fieldsFactory.build()];
 
       const findAllSpy = jest
         .spyOn(service, 'findAll')
@@ -85,7 +85,7 @@ describe('FieldsController', () => {
   describe('findOne()', () => {
     it('should return a field get by id parameter', async () => {
       const fieldId = faker.string.uuid();
-      const mockedField = fieldFactory.build();
+      const mockedField = fieldsFactory.build();
 
       const findOneSpy = jest
         .spyOn(service, 'findOne')

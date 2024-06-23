@@ -1,7 +1,7 @@
 import { faker } from '@faker-js/faker';
 import { Test, TestingModule } from '@nestjs/testing';
 
-import { userDtoFactory, userFactory } from './factories/user.factory';
+import { usersDtoFactory, usersFactory } from './factories/users.factory';
 import { UsersController } from './users.controller';
 import { UsersService } from './users.service';
 
@@ -37,8 +37,8 @@ describe('UsersController', () => {
 
   describe('create()', () => {
     it('should create a new user', async () => {
-      const createUserDto = userDtoFactory.build();
-      const mockedUser = userFactory.build();
+      const createUserDto = usersDtoFactory.build();
+      const mockedUser = usersFactory.build();
       const createSpy = jest
         .spyOn(service, 'create')
         .mockResolvedValueOnce(mockedUser);
@@ -52,8 +52,8 @@ describe('UsersController', () => {
   describe('update()', () => {
     it('should update an user', async () => {
       const userId = faker.string.uuid();
-      const mockedUser = userFactory.build();
-      const updateUserDto = userDtoFactory.build();
+      const mockedUser = usersFactory.build();
+      const updateUserDto = usersDtoFactory.build();
       const updateSpy = jest
         .spyOn(service, 'update')
         .mockResolvedValueOnce(mockedUser);
@@ -66,7 +66,7 @@ describe('UsersController', () => {
 
   describe('findAll()', () => {
     it('should return an array of users', async () => {
-      const mockedUsers = [userFactory.build(), userFactory.build()];
+      const mockedUsers = [usersFactory.build(), usersFactory.build()];
 
       const findAllSpy = jest
         .spyOn(service, 'findAll')
@@ -81,7 +81,7 @@ describe('UsersController', () => {
   describe('findOne()', () => {
     it('should return a user get by id parameter', async () => {
       const userId = faker.string.uuid();
-      const mockedUser = userFactory.build();
+      const mockedUser = usersFactory.build();
 
       const findOneSpy = jest
         .spyOn(service, 'findOne')

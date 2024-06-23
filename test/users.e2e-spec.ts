@@ -2,10 +2,10 @@ import { faker } from '@faker-js/faker';
 import * as request from 'supertest';
 
 import { User } from '../src/users/entities/user.entity';
-import { userDtoFactory } from '../src/users/factories/user.factory';
+import { usersDtoFactory } from '../src/users/factories/users.factory';
 
 describe('User (e2e)', () => {
-  const userParams = userDtoFactory.build();
+  const userParams = usersDtoFactory.build();
   let user;
 
   describe('Successful CRUD test', () => {
@@ -37,7 +37,7 @@ describe('User (e2e)', () => {
     });
 
     it('/users/:id (PATCH)', async () => {
-      const { password, ...updatedUserParams } = userDtoFactory.build();
+      const { password, ...updatedUserParams } = usersDtoFactory.build();
       const response = await request(global.app.getHttpServer())
         .patch(`/users/${user.id}`)
         .send({ password, ...updatedUserParams });
@@ -73,7 +73,7 @@ describe('User (e2e)', () => {
     });
 
     it('/users/:id (PATCH)', async () => {
-      const updatedUserParams = userDtoFactory.build();
+      const updatedUserParams = usersDtoFactory.build();
       const response = await request(global.app.getHttpServer())
         .patch(`/users/1`)
         .send(updatedUserParams);
@@ -102,7 +102,7 @@ describe('User (e2e)', () => {
     });
 
     it('/users/:id (PATCH)', async () => {
-      const updatedUserParams = userDtoFactory.build();
+      const updatedUserParams = usersDtoFactory.build();
       const response = await request(global.app.getHttpServer())
         .patch(`/users/${faker.string.uuid()}`)
         .send(updatedUserParams);
@@ -128,7 +128,7 @@ describe('User (e2e)', () => {
           beforeEach(async () => {
             const response = await request(global.app.getHttpServer())
               .post('/users')
-              .send(userDtoFactory.build());
+              .send(usersDtoFactory.build());
 
             url = `/users/${response.body.id}`;
             user = response.body;
@@ -138,7 +138,7 @@ describe('User (e2e)', () => {
             const response = await request(global.app.getHttpServer())
               [protocol](url)
               .send({
-                ...userDtoFactory.build(),
+                ...usersDtoFactory.build(),
                 createdAt: Date.now(),
                 id: faker.string.uuid(),
               });

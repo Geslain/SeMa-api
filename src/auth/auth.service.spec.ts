@@ -3,7 +3,10 @@ import { JwtService } from '@nestjs/jwt';
 import { ConflictException, UnauthorizedException } from '@nestjs/common';
 
 import { UsersService } from '../users/users.service';
-import { userDtoFactory, userFactory } from '../users/factories/user.factory';
+import {
+  usersDtoFactory,
+  usersFactory,
+} from '../users/factories/users.factory';
 
 import { AuthService } from './auth.service';
 import { SignUpDto } from './dto/sign-up.dto';
@@ -48,8 +51,8 @@ describe('AuthService', () => {
 
   describe('signUp()', () => {
     it('should return signed up user', async () => {
-      const mockedUser = userDtoFactory.build();
-      const signupDto: SignUpDto = userDtoFactory.build();
+      const mockedUser = usersDtoFactory.build();
+      const signupDto: SignUpDto = usersDtoFactory.build();
       const findUserSpy = jest
         .spyOn(mockUserService, 'findOneByEmail')
         .mockResolvedValue(null);
@@ -65,8 +68,8 @@ describe('AuthService', () => {
     });
 
     it('should throw error is user already exists', async () => {
-      const mockedUser = userDtoFactory.build();
-      const signupDto: SignUpDto = userDtoFactory.build();
+      const mockedUser = usersDtoFactory.build();
+      const signupDto: SignUpDto = usersDtoFactory.build();
       const findUserSpy = jest
         .spyOn(mockUserService, 'findOneByEmail')
         .mockResolvedValue(mockedUser);
@@ -81,11 +84,11 @@ describe('AuthService', () => {
 
   describe('signIn()', () => {
     it('should return signed in user', async () => {
-      const mockedUser = userFactory.build();
+      const mockedUser = usersFactory.build();
       const userPassword = mockedUser.password + '';
       await mockedUser.hashPassword();
 
-      const { email, password } = userDtoFactory.build({
+      const { email, password } = usersDtoFactory.build({
         password: userPassword,
       });
       const mockAccessToken = 'access_token';
@@ -111,9 +114,9 @@ describe('AuthService', () => {
     });
 
     it('should throw error if user does not exists', async () => {
-      const mockedUser = userFactory.build();
+      const mockedUser = usersFactory.build();
 
-      const { email, password } = userDtoFactory.build({
+      const { email, password } = usersDtoFactory.build({
         password: mockedUser.password,
       });
       const signInDto: SignInDto = { email, password };
@@ -132,9 +135,9 @@ describe('AuthService', () => {
     });
 
     it('should throw error if password does not match', async () => {
-      const mockedUser = userFactory.build();
+      const mockedUser = usersFactory.build();
 
-      const { email, password } = userDtoFactory.build({
+      const { email, password } = usersDtoFactory.build({
         password: mockedUser.password,
       });
       const signInDto: SignInDto = { email, password };

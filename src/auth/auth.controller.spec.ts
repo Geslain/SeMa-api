@@ -1,6 +1,9 @@
 import { Test, TestingModule } from '@nestjs/testing';
 
-import { userDtoFactory, userFactory } from '../users/factories/user.factory';
+import {
+  usersDtoFactory,
+  usersFactory,
+} from '../users/factories/users.factory';
 
 import { AuthController } from './auth.controller';
 import { AuthService } from './auth.service';
@@ -39,8 +42,8 @@ describe('AuthController', () => {
 
   describe('sign up', () => {
     it('should sign up', async () => {
-      const signupDto: SignUpDto = userDtoFactory.build();
-      const mockedUser = userFactory.build();
+      const signupDto: SignUpDto = usersDtoFactory.build();
+      const mockedUser = usersFactory.build();
       const signUpSpy = jest
         .spyOn(service, 'signUp')
         .mockResolvedValueOnce(mockedUser);
@@ -53,9 +56,9 @@ describe('AuthController', () => {
 
   describe('sign in', () => {
     it('should sign in', async () => {
-      const { email, password } = userDtoFactory.build();
+      const { email, password } = usersDtoFactory.build();
       const signInDto: SignInDto = { email, password };
-      const mockedUser = userFactory.build();
+      const mockedUser = usersFactory.build();
       const signInSpy = jest
         .spyOn(service, 'signIn')
         .mockResolvedValueOnce(mockedUser);

@@ -11,11 +11,11 @@ import * as request from 'supertest';
 
 import { AppModule } from '../../src/app.module';
 import { NotFoundInterceptor } from '../../src/common/interceptors/not-found.interceptor';
-import { userFactory } from '../../src/users/factories/user.factory';
+import { usersFactory } from '../../src/users/factories/users.factory';
 import { AuthGuard } from '../../src/auth/auth.guard';
 
 module.exports = async () => {
-  const user = userFactory.build();
+  const user = usersFactory.build();
   global.pg = await new PostgreSqlContainer('postgres:latest')
     .withExposedPorts({ container: 5432, host: 55044 })
     .withDatabase(process.env.DATABASE_NAME)
