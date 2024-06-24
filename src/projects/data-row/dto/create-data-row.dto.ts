@@ -8,6 +8,6 @@ export class CreateDataRowDto {
   @IsArray()
   @ApiProperty()
   @ValidateNested({ each: true })
-  @Type(() => CreateDataRowFieldDto)
+  @Type(/* istanbul ignore next */ () => CreateDataRowFieldDto)
   fields: CreateDataRowFieldDto[];
 }

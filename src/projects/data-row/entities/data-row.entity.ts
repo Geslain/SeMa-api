@@ -11,20 +11,28 @@ export class DataRow extends BaseEntity {
     example: [DataRowField],
     description: 'Every field for a data row',
   })
-  @OneToMany(() => DataRowField, (dataRowField) => dataRowField.dataRow, {
-    eager: true,
-    cascade: true,
-    onDelete: 'CASCADE',
-  })
+  @OneToMany(
+    /* istanbul ignore next */ () => DataRowField,
+    /* istanbul ignore next */ (dataRowField) => dataRowField.dataRow,
+    {
+      eager: true,
+      cascade: true,
+      onDelete: 'CASCADE',
+    },
+  )
   fields: DataRowField[];
 
   @ApiProperty({
     example: 'd13f7357-a2f4-4043-a5b7-7c9617c66e8d',
     description: 'Project uuid for data row',
   })
-  @ManyToOne(() => Project, (project) => project.dataRows, {
-    nullable: false,
-    onDelete: 'CASCADE',
-  })
+  @ManyToOne(
+    /* istanbul ignore next */ () => Project,
+    /* istanbul ignore next */ (project) => project.dataRows,
+    {
+      nullable: false,
+      onDelete: 'CASCADE',
+    },
+  )
   project: Project;
 }

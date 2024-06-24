@@ -34,10 +34,16 @@ export class User extends BaseEntity {
     type: Field,
     isArray: true,
   })
-  @OneToMany(() => Field, (field) => field.owner)
+  @OneToMany(
+    /* istanbul ignore next */ () => Field /* istanbul ignore next */,
+    /* istanbul ignore next */ (field) => field.owner,
+  )
   fields: Field[];
-
-  @OneToMany(() => Project, (project) => project.owner, {})
+  @OneToMany(
+    /* istanbul ignore next */ () => Project,
+    /* istanbul ignore next */ (project) => project.owner,
+    {},
+  )
   projects: Project[];
 
   /**

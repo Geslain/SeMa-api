@@ -40,9 +40,13 @@ export class Field extends BaseEntity {
   @ApiProperty({
     description: "Field's owner",
   })
-  @ManyToOne(() => User, (user) => user.fields, {
-    nullable: false,
-    onDelete: 'CASCADE',
-  })
+  @ManyToOne(
+    /* istanbul ignore next */ () => User,
+    /* istanbul ignore next */ (user) => user.fields,
+    {
+      nullable: false,
+      onDelete: 'CASCADE',
+    },
+  )
   owner: User;
 }

@@ -8,6 +8,6 @@ export class UpdateDataRowDto {
   @IsArray()
   @ApiProperty()
   @ValidateNested({ each: true })
-  @Type(() => UpdateDataRowFieldDto)
+  @Type(/* istanbul ignore next */ () => UpdateDataRowFieldDto)
   fields: UpdateDataRowFieldDto[];
 }

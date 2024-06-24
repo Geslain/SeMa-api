@@ -11,12 +11,19 @@ export class Project extends BaseEntity {
   @Column({ type: 'varchar' })
   name: string;
 
-  @OneToMany(() => DataRow, (dataRow) => dataRow.project)
+  @OneToMany(
+    /* istanbul ignore next */ () => DataRow,
+    /* istanbul ignore next */ (dataRow) => dataRow.project,
+  )
   dataRows: DataRow[];
 
-  @ManyToOne(() => User, (user) => user.projects, {
-    nullable: false,
-    onDelete: 'CASCADE',
-  })
+  @ManyToOne(
+    /* istanbul ignore next */ () => User,
+    /* istanbul ignore next */ (user) => user.projects,
+    {
+      nullable: false,
+      onDelete: 'CASCADE',
+    },
+  )
   owner: User;
 }

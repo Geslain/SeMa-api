@@ -23,17 +23,21 @@ export class DataRowField {
 
   @PrimaryColumn({ type: 'uuid' })
   dataRowId: string;
-  @ManyToOne(() => DataRow, (dataRow) => dataRow.fields, {
-    onDelete: 'CASCADE',
-    onUpdate: 'CASCADE',
-    nullable: false,
-  })
+  @ManyToOne(
+    /* istanbul ignore next */ () => DataRow,
+    /* istanbul ignore next */ (dataRow) => dataRow.fields,
+    {
+      onDelete: 'CASCADE',
+      onUpdate: 'CASCADE',
+      nullable: false,
+    },
+  )
   @JoinColumn({ name: 'dataRowId' })
   dataRow: DataRow;
 
   @PrimaryColumn({ name: 'fieldId', type: 'uuid' })
   fieldId: string;
-  @ManyToOne(() => Field, {
+  @ManyToOne(/* istanbul ignore next */ () => Field, {
     onDelete: 'CASCADE',
     onUpdate: 'CASCADE',
     nullable: false,

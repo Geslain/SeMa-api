@@ -1,0 +1,15 @@
+{
+  "coveragePathIgnorePatterns": [
+    "node_modules",
+    ".module.ts",
+    "<rootDir>/src/app/main.ts",
+    ".factory.ts"
+  ],
+  "collectCoverage": true,
+  "moduleFileExtensions": ["js", "json", "ts"],
+  "modulePaths": ["."],
+  "testRegex": ".*\\.spec\\.ts$",
+  "transform": {
+    "^.+\\.(t|j)s$": "ts-jest"
+  }
+}

@@ -26,6 +26,6 @@ export class CreateFieldDto {
   @ApiProperty()
   @IsFieldValues()
   @IsArray({ message: 'You must provide an array of string' })
-  @ValidateIf((f) => f.type === FieldType.LIST)
+  @ValidateIf(/* istanbul ignore next */ (f) => f.type === FieldType.LIST)
   values?: string[];
 }
