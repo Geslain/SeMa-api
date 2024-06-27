@@ -3,8 +3,8 @@
     "node_modules",
     ".module.ts",
     ".factory.ts",
-    "<rootDir>/src/main.ts",
-    "<rootDir>/src/common/migrations"
+    "main.ts",
+    "src/common/migrations"
   ],
   "moduleFileExtensions": [
     "js",
