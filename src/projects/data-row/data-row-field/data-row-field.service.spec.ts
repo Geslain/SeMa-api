@@ -38,7 +38,7 @@ describe('DataRowFieldService', () => {
   });
 
   describe('create()', () => {
-    it('should insert a new data field row', async () => {
+    it('should insert a new data row field', async () => {
       const mockedDataFieldRowDto = dataRowFieldsDtoFactory.build();
       const dataRowId = faker.string.uuid();
 
@@ -93,7 +93,7 @@ describe('DataRowFieldService', () => {
       expect(updateDataFieldRow).toEqual(null);
     });
 
-    it('should update an existing data field row', async () => {
+    it('should update an existing data row field', async () => {
       const mockedDataFieldRowDto = dataRowFieldsDtoFactory.build();
       const dataRowId = faker.string.uuid();
 

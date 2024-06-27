@@ -29,6 +29,7 @@ export class DataRowService {
     dataRow.fields = await Promise.all(
       createDataRowDto.fields.map(async (dataRowField) => {
         const { fieldId, value } = dataRowField;
+
         if (!fieldId)
           // Throw error if field id is missing
           throw new BadRequestException(`Field id can't be null`);
