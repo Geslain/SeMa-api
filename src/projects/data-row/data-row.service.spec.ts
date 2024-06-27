@@ -7,7 +7,7 @@ import { QueryFailedError } from 'typeorm';
 import { mockRepository } from '../../common/tests/mock-repository';
 import { FieldsService } from '../../fields/fields.service';
 import { ProjectsService } from '../projects.service';
-import { projectFactory } from '../factories/projects.factory';
+import { projectsFactory } from '../factories/projects.factory';
 import { fieldsFactory } from '../../fields/factories/fields.factory';
 
 import { DataRowService } from './data-row.service';
@@ -90,7 +90,7 @@ describe('DataRowService', () => {
 
     it('should throw an error if field id is missing', async () => {
       const projectId = faker.string.uuid();
-      const project = projectFactory.build({ id: projectId });
+      const project = projectsFactory.build({ id: projectId });
       const fields = [
         dataRowFieldsDtoFactory.build({ fieldId: null }),
         dataRowFieldsDtoFactory.build(),
@@ -124,7 +124,7 @@ describe('DataRowService', () => {
 
     it('should throw an error if field is missing', async () => {
       const projectId = faker.string.uuid();
-      const project = projectFactory.build({ id: projectId });
+      const project = projectsFactory.build({ id: projectId });
       const fields = [
         dataRowFieldsDtoFactory.build(),
         dataRowFieldsDtoFactory.build(),
@@ -164,7 +164,7 @@ describe('DataRowService', () => {
 
     it('should insert a new data row', async () => {
       const projectId = faker.string.uuid();
-      const project = projectFactory.build({ id: projectId });
+      const project = projectsFactory.build({ id: projectId });
       const dataRowFields = [
         dataRowFieldsDtoFactory.build(),
         dataRowFieldsDtoFactory.build(),
@@ -418,13 +418,13 @@ describe('DataRowService', () => {
         affected: 1,
       });
 
-      const dataRowFieldList = await service.remove(projectId, dataRowId);
+      const result = await service.remove(projectId, dataRowId);
 
       expect(mockedDataRowRepository.delete).toHaveBeenNthCalledWith(1, {
         id: dataRowId,
         project: { id: projectId },
       });
-      expect(dataRowFieldList).toEqual({
+      expect(result).toEqual({
         raw: [],
         affected: 1,
       });
@@ -441,13 +441,13 @@ describe('DataRowService', () => {
         }),
       );
 
-      const dataRowFieldList = await service.remove(projectId, dataRowId);
+      const result = await service.remove(projectId, dataRowId);
 
       expect(mockedDataRowRepository.delete).toHaveBeenNthCalledWith(1, {
         id: dataRowId,
         project: { id: projectId },
       });
-      expect(dataRowFieldList).toEqual(null);
+      expect(result).toEqual(null);
     });
   });
 });

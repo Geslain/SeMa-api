@@ -105,7 +105,7 @@ describe('DataRowController', () => {
   });
 
   describe('remove()', () => {
-    it('should return a dataRow get by id parameter', async () => {
+    it('should remove a dataRow get by id parameter', async () => {
       const projectId = faker.string.uuid();
       const dataRowId = faker.string.uuid();
 
