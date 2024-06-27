@@ -23,7 +23,7 @@ describe('Field (e2e)', () => {
       const response = await request(global.app.getHttpServer()).get('/fields');
 
       expect(response.status).toBe(200);
-      expect(response.body[0]).toEqual(field);
+      expect(response.body[0]).toMatchObject(field);
     });
 
     it('/fields/:id (GET)', async () => {

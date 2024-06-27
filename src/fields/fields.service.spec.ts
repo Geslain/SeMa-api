@@ -147,14 +147,19 @@ describe('FieldsService', () => {
       const mockedField = fieldsFactory.build({ id: fieldId, owner });
 
       jest
-        .spyOn(mockFieldRepository, 'findOneBy')
+        .spyOn(mockFieldRepository, 'findOne')
         .mockResolvedValueOnce(mockedField);
 
       const field = await service.findOne(fieldId);
       expect(getOwner).toHaveBeenCalledTimes(1);
-      expect(mockFieldRepository.findOneBy).toHaveBeenCalledWith({
-        id: fieldId,
-        owner: { id: owner.id },
+      expect(mockFieldRepository.findOne).toHaveBeenCalledWith({
+        where: {
+          id: fieldId,
+          owner: {
+            id: owner.id,
+          },
+        },
+        relations: ['owner'],
       });
       expect(field).toEqual(mockedField);
     });

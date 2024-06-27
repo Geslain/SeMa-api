@@ -47,7 +47,15 @@ export class FieldsService extends WithOwnerService {
 
   async findOne(id: string) {
     const { id: ownerId } = await this.getOwner();
-    return this.fieldRepository.findOneBy({ id, owner: { id: ownerId } });
+    return this.fieldRepository.findOne({
+      where: {
+        id,
+        owner: {
+          id: ownerId,
+        },
+      },
+      relations: ['owner'],
+    });
   }
 
   async update(id: string, updateFieldDto: UpdateFieldDto) {
