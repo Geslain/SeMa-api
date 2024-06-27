@@ -10,7 +10,7 @@ export const projectsDtoFactory = Factory.define<CreateProjectDto>(() => ({
   name: faker.word.noun(),
 }));
 
-export const projectFactory = Factory.define<Project>(({ associations }) => ({
+export const projectsFactory = Factory.define<Project>(({ associations }) => ({
   ...baseEntityFactory.build(),
   ...projectsDtoFactory.build(),
   owner: associations.owner,

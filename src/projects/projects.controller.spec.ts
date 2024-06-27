@@ -1,10 +1,16 @@
 import { Test, TestingModule } from '@nestjs/testing';
+import { faker } from '@faker-js/faker';
 
 import { ProjectsController } from './projects.controller';
 import { ProjectsService } from './projects.service';
+import {
+  projectsDtoFactory,
+  projectsFactory,
+} from './factories/projects.factory';
 
 describe('ProjectsController', () => {
   let controller: ProjectsController;
+  let service: ProjectsService;
 
   const mockedProjectService = {
     findAll: jest.fn(),
@@ -21,9 +27,82 @@ describe('ProjectsController', () => {
     }).compile();
 
     controller = module.get<ProjectsController>(ProjectsController);
+    service = module.get<ProjectsService>(ProjectsService);
   });
 
   it('should be defined', () => {
     expect(controller).toBeDefined();
+  });
+
+  describe('create()', () => {
+    it('should create a new project', async () => {
+      const createProjectDto = projectsDtoFactory.build();
+      const mockedProject = projectsFactory.build();
+      const createSpy = jest
+        .spyOn(service, 'create')
+        .mockResolvedValueOnce(mockedProject);
+
+      const project = await controller.create(createProjectDto);
+      expect(createSpy).toHaveBeenCalledWith(createProjectDto);
+      expect(project).toEqual(mockedProject);
+    });
+  });
+
+  describe('update()', () => {
+    it('should update an project', async () => {
+      const projectId = faker.string.uuid();
+      const mockedProject = projectsFactory.build();
+      const updateProjectDto = projectsDtoFactory.build();
+      const updateSpy = jest
+        .spyOn(service, 'update')
+        .mockResolvedValueOnce(mockedProject);
+
+      const project = await controller.update(projectId, updateProjectDto);
+      expect(updateSpy).toHaveBeenCalledWith(projectId, updateProjectDto);
+      expect(project).toEqual(mockedProject);
+    });
+  });
+
+  describe('findAll()', () => {
+    it('should return an array of projects', async () => {
+      const mockedProjects = [projectsFactory.build(), projectsFactory.build()];
+
+      const findAllSpy = jest
+        .spyOn(service, 'findAll')
+        .mockResolvedValueOnce(mockedProjects);
+
+      const projects = await controller.findAll();
+      expect(findAllSpy).toHaveBeenCalledWith();
+      expect(projects).toEqual(mockedProjects);
+    });
+  });
+
+  describe('findOne()', () => {
+    it('should return a project get by id parameter', async () => {
+      const projectId = faker.string.uuid();
+      const mockedProject = projectsFactory.build();
+
+      const findOneSpy = jest
+        .spyOn(service, 'findOne')
+        .mockResolvedValueOnce(mockedProject);
+
+      const project = await controller.findOne(projectId);
+      expect(findOneSpy).toHaveBeenCalledWith(projectId);
+      expect(project).toEqual(mockedProject);
+    });
+  });
+
+  describe('remove()', () => {
+    it('should remove a project get by id parameter', async () => {
+      const projectId = faker.string.uuid();
+
+      const findOneSpy = jest
+        .spyOn(service, 'remove')
+        .mockResolvedValueOnce(null);
+
+      const result = await controller.remove(projectId);
+      expect(findOneSpy).toHaveBeenCalledWith(projectId);
+      expect(result).toEqual(null);
+    });
   });
 });

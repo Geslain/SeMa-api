@@ -48,6 +48,9 @@ export class ProjectsService extends WithOwnerService {
       id,
       owner: { id: ownerId },
     });
+
+    if (!project) return null;
+
     project.name = updateProjectDto.name;
 
     return this.projectsRepository.save(project);
