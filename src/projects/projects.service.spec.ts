@@ -10,6 +10,8 @@ import { mockRepository } from '../common/tests/mock-repository';
 import { usersFactory } from '../users/factories/users.factory';
 import { FieldsService } from '../fields/fields.service';
 import { fieldsFactory } from '../fields/factories/fields.factory';
+import { DevicesService } from '../devices/devices.service';
+import { devicesFactory } from '../devices/factories/devices.factory';
 
 import { ProjectsService } from './projects.service';
 import { Project } from './entities/project.entity';
@@ -21,7 +23,9 @@ import {
 describe('ProjectsService', () => {
   let service: ProjectsService;
   const mockProjectRepository = mockRepository();
-  const mockUserService = {};
+  const mockDevicesService = {
+    findOne: jest.fn(),
+  };
   const mockFieldService = {
     findOne: jest.fn(),
   };
@@ -38,11 +42,15 @@ describe('ProjectsService', () => {
         },
         {
           provide: UsersService,
-          useValue: mockUserService,
+          useValue: {},
         },
         {
           provide: FieldsService,
           useValue: mockFieldService,
+        },
+        {
+          provide: DevicesService,
+          useValue: mockDevicesService,
         },
         {
           provide: REQUEST,
@@ -75,6 +83,10 @@ describe('ProjectsService', () => {
       mockProject.owner = owner;
       mockProject.name = mockProjectCreateDto.name;
       mockProject.dataRows = [];
+
+      jest
+        .spyOn(service as any, 'addDevice')
+        .mockImplementation((project) => Promise.resolve(project));
 
       jest
         .spyOn(mockProjectRepository, 'save')
@@ -137,6 +149,10 @@ describe('ProjectsService', () => {
         .spyOn(mockProjectRepository, 'findOneBy')
         .mockImplementation(() => Promise.resolve(null));
 
+      jest
+        .spyOn(service as any, 'addDevice')
+        .mockImplementation((project) => Promise.resolve(project));
+
       const result = await service.update(id, mockProjectUpdateDto);
 
       expect(getOwner).toHaveBeenCalledTimes(1);
@@ -158,6 +174,10 @@ describe('ProjectsService', () => {
       jest
         .spyOn(mockProjectRepository, 'findOneBy')
         .mockImplementation(() => Promise.resolve(mockedProject));
+
+      jest
+        .spyOn(service as any, 'addDevice')
+        .mockImplementation((project) => Promise.resolve(project));
 
       const result = await service.update(id, mockProjectUpdateDto);
 
@@ -498,6 +518,85 @@ describe('ProjectsService', () => {
       expect(saveSpy).not.toHaveBeenCalled();
       expect(result).toBe(mockedProject);
       expect(result.fields).toEqual(null);
+    });
+  });
+
+  describe('addDevice()', () => {
+    let testService;
+    beforeEach(async () => {
+      class TestAddDevice extends ProjectsService {
+        test(deviceId: string, project: Project) {
+          return this.addDevice(deviceId, project);
+        }
+      }
+
+      const module: TestingModule = await Test.createTestingModule({
+        providers: [
+          TestAddDevice,
+          {
+            provide: getRepositoryToken(Project),
+            useValue: mockProjectRepository,
+          },
+          {
+            provide: UsersService,
+            useValue: {},
+          },
+          {
+            provide: FieldsService,
+            useValue: mockFieldService,
+          },
+          {
+            provide: DevicesService,
+            useValue: mockDevicesService,
+          },
+          {
+            provide: REQUEST,
+            useValue: {},
+          },
+        ],
+      }).compile();
+
+      testService = module.get<TestAddDevice>(TestAddDevice);
+    });
+    it('should throw an error', async () => {
+      const deviceId = faker.string.uuid();
+      const project = projectsFactory.build();
+      await expect(() => testService.test(deviceId, project)).rejects.toThrow(
+        new BadRequestException(`No device found with id ${deviceId}`),
+      );
+
+      expect(mockDevicesService.findOne).toHaveBeenCalledWith(deviceId);
+    });
+
+    it('should update project with device', async () => {
+      const deviceId = faker.string.uuid();
+      const device = devicesFactory.build({ id: deviceId });
+      const project = projectsFactory.build();
+      const projectCopy = Object.assign({}, project);
+
+      const findOneSpy = jest
+        .spyOn(mockDevicesService, 'findOne')
+        .mockImplementationOnce(() => Promise.resolve(device));
+
+      const result = await testService.test(deviceId, project);
+
+      projectCopy.device = device;
+
+      expect(findOneSpy).toHaveBeenCalledWith(deviceId);
+      expect(result).toStrictEqual(projectCopy);
+    });
+
+    it('should not update project', async () => {
+      const deviceId = null;
+      const project = projectsFactory.build();
+      const projectCopy = Object.assign({}, project);
+
+      const findOneSpy = jest.spyOn(mockDevicesService, 'findOne');
+
+      const result = await testService.test(deviceId, project);
+
+      expect(findOneSpy).not.toHaveBeenCalled();
+      expect(result).toStrictEqual(projectCopy);
     });
   });
 });

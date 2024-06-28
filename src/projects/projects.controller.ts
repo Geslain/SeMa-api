@@ -46,6 +46,8 @@ export class ProjectsController {
     return this.projectsService.remove(id);
   }
 
+  // Fields
+
   @Post('/:projectId/fields')
   addField(
     @Param('projectId', ParseUUIDPipe) projectId: string,

@@ -6,6 +6,7 @@ import { REQUEST } from '@nestjs/core';
 import { UsersService } from '../users/users.service';
 import { WithOwnerService } from '../common/WithOwnerService';
 import { FieldsService } from '../fields/fields.service';
+import { DevicesService } from '../devices/devices.service';
 
 import { CreateProjectDto } from './dto/create-project.dto';
 import { UpdateProjectDto } from './dto/update-project.dto';
@@ -19,15 +20,19 @@ export class ProjectsService extends WithOwnerService {
     @Inject(REQUEST) protected request: Request,
     @Inject(UsersService) protected usersService: UsersService,
     @Inject(FieldsService) protected fieldsService: FieldsService,
+    @Inject(DevicesService) protected devicesService: DevicesService,
   ) {
     super(request, usersService);
   }
 
   async create(createProjectDto: CreateProjectDto) {
     const project = new Project();
+    const { deviceId, name } = createProjectDto;
     project.owner = await this.getOwner();
-    project.name = createProjectDto.name;
+    project.name = name;
     project.dataRows = [];
+
+    await this.addDevice(deviceId, project);
 
     return this.projectsRepository.save(project);
   }
@@ -49,7 +54,7 @@ export class ProjectsService extends WithOwnerService {
 
   async update(id: string, updateProjectDto: UpdateProjectDto) {
     const { id: ownerId } = await this.getOwner();
-
+    const { deviceId, name } = updateProjectDto;
     const project = await this.projectsRepository.findOneBy({
       id,
       owner: { id: ownerId },
@@ -57,7 +62,9 @@ export class ProjectsService extends WithOwnerService {
 
     if (!project) return null;
 
-    project.name = updateProjectDto.name;
+    project.name = name;
+
+    await this.addDevice(deviceId, project);
 
     return this.projectsRepository.save(project);
   }
@@ -108,5 +115,16 @@ export class ProjectsService extends WithOwnerService {
     if (!project.fields || !project.fields.length) return project;
     project.fields = project.fields.filter((field) => field.id !== fieldId);
     return this.projectsRepository.save(project);
+  }
+
+  protected async addDevice(deviceId: string, project: Project) {
+    if (deviceId) {
+      const device = await this.devicesService.findOne(deviceId);
+      if (!device)
+        throw new BadRequestException(`No device found with id ${deviceId}`);
+
+      project.device = device;
+    }
+    return project;
   }
 }
