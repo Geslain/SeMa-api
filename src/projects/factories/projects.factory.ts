@@ -15,4 +15,5 @@ export const projectsFactory = Factory.define<Project>(({ associations }) => ({
   ...projectsDtoFactory.build(),
   owner: associations.owner,
   dataRows: dataRowsFactory.buildList(2),
+  fields: associations.fields || [],
 }));

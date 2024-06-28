@@ -2,10 +2,14 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { getRepositoryToken } from '@nestjs/typeorm';
 import { REQUEST } from '@nestjs/core';
 import { faker } from '@faker-js/faker';
+import { BadRequestException } from '@nestjs/common';
+import { isArray } from 'class-validator';
 
 import { UsersService } from '../users/users.service';
 import { mockRepository } from '../common/tests/mock-repository';
 import { usersFactory } from '../users/factories/users.factory';
+import { FieldsService } from '../fields/fields.service';
+import { fieldsFactory } from '../fields/factories/fields.factory';
 
 import { ProjectsService } from './projects.service';
 import { Project } from './entities/project.entity';
@@ -18,6 +22,9 @@ describe('ProjectsService', () => {
   let service: ProjectsService;
   const mockProjectRepository = mockRepository();
   const mockUserService = {};
+  const mockFieldService = {
+    findOne: jest.fn(),
+  };
   let getOwner;
   const owner = usersFactory.build();
 
@@ -32,6 +39,10 @@ describe('ProjectsService', () => {
         {
           provide: UsersService,
           useValue: mockUserService,
+        },
+        {
+          provide: FieldsService,
+          useValue: mockFieldService,
         },
         {
           provide: REQUEST,
@@ -99,15 +110,20 @@ describe('ProjectsService', () => {
       const mockedProject = projectsFactory.build({ id });
 
       jest
-        .spyOn(mockProjectRepository, 'findOneBy')
+        .spyOn(mockProjectRepository, 'findOne')
         .mockReturnValueOnce(mockedProject);
 
       const result = await service.findOne(id);
 
       expect(getOwner).toHaveBeenCalledTimes(1);
-      expect(mockProjectRepository.findOneBy).toHaveBeenCalledWith({
-        id,
-        owner: { id: owner.id },
+      expect(mockProjectRepository.findOne).toHaveBeenCalledWith({
+        where: {
+          id,
+          owner: {
+            id: owner.id,
+          },
+        },
+        relations: ['fields'],
       });
       expect(result).toEqual(mockedProject);
     });
@@ -187,6 +203,301 @@ describe('ProjectsService', () => {
         raw: [],
         affected: 1,
       });
+    });
+  });
+
+  describe('addField()', () => {
+    it('should throw error when project does not exists', async () => {
+      const id = faker.string.uuid();
+      const mockedCreateProjectFieldDto = {
+        fieldId: faker.string.uuid(),
+      };
+
+      const findOneSpy = jest
+        .spyOn(service, 'findOne')
+        .mockResolvedValueOnce(null);
+
+      await expect(() =>
+        service.addField(id, mockedCreateProjectFieldDto),
+      ).rejects.toThrowError(
+        new BadRequestException(`Project with id ${id} not found`),
+      );
+
+      expect(findOneSpy).toHaveBeenCalledWith(id);
+    });
+    it('should throw error when field does not exists', async () => {
+      const id = faker.string.uuid();
+      const fieldId = faker.string.uuid();
+      const mockedProject = projectsFactory.build({ id });
+      const mockedCreateProjectFieldDto = {
+        fieldId,
+      };
+
+      const findOneSpy = jest
+        .spyOn(service, 'findOne')
+        .mockResolvedValueOnce(mockedProject);
+
+      const findOneFieldSpy = jest
+        .spyOn(mockFieldService, 'findOne')
+        .mockResolvedValueOnce(null);
+
+      await expect(() =>
+        service.addField(id, mockedCreateProjectFieldDto),
+      ).rejects.toThrowError(
+        new BadRequestException(`Field with id ${fieldId} not found`),
+      );
+
+      expect(findOneSpy).toHaveBeenCalledWith(id);
+      expect(findOneFieldSpy).toHaveBeenCalledWith(fieldId);
+    });
+
+    it('should not add field when already exists', async () => {
+      const id = faker.string.uuid();
+      const fieldId = faker.string.uuid();
+      const mockedField = fieldsFactory.build({ id: fieldId });
+      const mockedProject = projectsFactory.build(
+        {
+          id,
+        },
+        { associations: { fields: [mockedField] } },
+      );
+      const mockedProjectCopy = projectsFactory.build({
+        ...mockedProject,
+        fields: [mockedField],
+      });
+      const mockedCreateProjectFieldDto = {
+        fieldId,
+      };
+
+      const findOneSpy = jest
+        .spyOn(service, 'findOne')
+        .mockResolvedValueOnce(mockedProject);
+
+      const findOneFieldSpy = jest
+        .spyOn(mockFieldService, 'findOne')
+        .mockResolvedValueOnce(mockedField);
+
+      const saveSpy = jest
+        .spyOn(mockProjectRepository, 'save')
+        .mockImplementationOnce((p) => Promise.resolve(p));
+
+      const result = await service.addField(id, mockedCreateProjectFieldDto);
+
+      expect(findOneSpy).toHaveBeenCalledWith(id);
+      expect(findOneFieldSpy).toHaveBeenCalledWith(fieldId);
+      expect(saveSpy).toHaveBeenCalledWith(mockedProjectCopy);
+      expect(result.fields.length).toEqual(1);
+
+      expect(result).toStrictEqual(mockedProject);
+    });
+
+    it('should add a new field (with existing field)', async () => {
+      const id = faker.string.uuid();
+      const fieldId = faker.string.uuid();
+      const mockedExistingField = fieldsFactory.build();
+      const mockedField = fieldsFactory.build({ id: fieldId });
+      const mockedProject = projectsFactory.build(
+        {
+          id,
+        },
+        { associations: { fields: [mockedExistingField] } },
+      );
+      const mockedProjectCopy = projectsFactory.build({
+        ...mockedProject,
+        fields: [mockedExistingField],
+      });
+      const mockedCreateProjectFieldDto = {
+        fieldId,
+      };
+
+      const findOneSpy = jest
+        .spyOn(service, 'findOne')
+        .mockResolvedValueOnce(mockedProject);
+
+      const findOneFieldSpy = jest
+        .spyOn(mockFieldService, 'findOne')
+        .mockResolvedValueOnce(mockedField);
+
+      const saveSpy = jest
+        .spyOn(mockProjectRepository, 'save')
+        .mockImplementationOnce((p) => Promise.resolve(p));
+
+      const result = await service.addField(id, mockedCreateProjectFieldDto);
+
+      mockedProjectCopy.fields.push(mockedField);
+
+      expect(findOneSpy).toHaveBeenCalledWith(id);
+      expect(findOneFieldSpy).toHaveBeenCalledWith(fieldId);
+      expect(saveSpy).toHaveBeenCalledWith(mockedProjectCopy);
+      expect(result.fields.length).toEqual(2);
+
+      expect(result).toStrictEqual(mockedProjectCopy);
+    });
+
+    it('should add a new field (without existing field)', async () => {
+      const id = faker.string.uuid();
+      const fieldId = faker.string.uuid();
+      const mockedField = fieldsFactory.build({ id: fieldId });
+      const mockedProject = projectsFactory.build(
+        {
+          id,
+        },
+        { associations: { fields: null } },
+      );
+      const mockedProjectCopy = projectsFactory.build({
+        ...mockedProject,
+        fields: null,
+      });
+      const mockedCreateProjectFieldDto = {
+        fieldId,
+      };
+
+      const findOneSpy = jest
+        .spyOn(service, 'findOne')
+        .mockResolvedValueOnce(mockedProject);
+
+      const findOneFieldSpy = jest
+        .spyOn(mockFieldService, 'findOne')
+        .mockResolvedValueOnce(mockedField);
+
+      const saveSpy = jest
+        .spyOn(mockProjectRepository, 'save')
+        .mockImplementationOnce((p) => Promise.resolve(p));
+
+      const result = await service.addField(id, mockedCreateProjectFieldDto);
+
+      mockedProjectCopy.fields = [mockedField];
+
+      expect(findOneSpy).toHaveBeenCalledWith(id);
+      expect(findOneFieldSpy).toHaveBeenCalledWith(fieldId);
+      expect(saveSpy).toHaveBeenCalledWith(mockedProjectCopy);
+      expect(result.fields.length).toEqual(1);
+
+      expect(result).toStrictEqual(mockedProjectCopy);
+    });
+  });
+  describe('findAllFields()', () => {
+    it('should return an array of project fields', async () => {
+      const id = faker.string.uuid();
+      const fields = fieldsFactory.buildList(3);
+      const mockedProject = projectsFactory.build(
+        {
+          id,
+        },
+        { associations: { fields } },
+      );
+
+      const findOneSpy = jest
+        .spyOn(service, 'findOne')
+        .mockResolvedValueOnce(mockedProject);
+
+      const result = await service.findAllFields(id);
+
+      expect(findOneSpy).toHaveBeenCalledWith(id);
+      expect(isArray(result)).toBe(true);
+      expect(result.length).toEqual(fields.length);
+    });
+    it('should return empty array', async () => {
+      const id = faker.string.uuid();
+      const mockedProject = projectsFactory.build(
+        {
+          id,
+        },
+        { associations: { fields: null } },
+      );
+
+      const findOneSpy = jest
+        .spyOn(service, 'findOne')
+        .mockResolvedValueOnce(mockedProject);
+
+      const result = await service.findAllFields(id);
+
+      expect(findOneSpy).toHaveBeenCalledWith(id);
+      expect(isArray(result)).toBe(true);
+      expect(result.length).toEqual(0);
+    });
+  });
+  describe('removeField()', () => {
+    it('should remove field', async () => {
+      const id = faker.string.uuid();
+      const fieldId = faker.string.uuid();
+      const fields = [
+        ...fieldsFactory.buildList(2),
+        fieldsFactory.build({ id: fieldId }),
+      ];
+      const mockedProject = projectsFactory.build(
+        {
+          id,
+        },
+        { associations: { fields } },
+      );
+
+      const findOneSpy = jest
+        .spyOn(service, 'findOne')
+        .mockResolvedValueOnce(mockedProject);
+
+      const saveSpy = jest
+        .spyOn(mockProjectRepository, 'save')
+        .mockImplementationOnce((p) => Promise.resolve(p));
+
+      const result = await service.removeField(id, fieldId);
+
+      expect(findOneSpy).toHaveBeenCalledWith(id);
+      expect(saveSpy).toHaveBeenCalledWith(mockedProject);
+      expect(result).toBe(mockedProject);
+      expect(result.fields.length).toEqual(fields.length - 1);
+    });
+    it('should not remove if field do not exists in project fields', async () => {
+      const id = faker.string.uuid();
+      const fieldId = faker.string.uuid();
+      const fields = fieldsFactory.buildList(2);
+      const mockedProject = projectsFactory.build(
+        {
+          id,
+        },
+        { associations: { fields } },
+      );
+
+      const findOneSpy = jest
+        .spyOn(service, 'findOne')
+        .mockResolvedValueOnce(mockedProject);
+
+      const saveSpy = jest
+        .spyOn(mockProjectRepository, 'save')
+        .mockImplementationOnce((p) => Promise.resolve(p));
+
+      const result = await service.removeField(id, fieldId);
+
+      expect(findOneSpy).toHaveBeenCalledWith(id);
+      expect(saveSpy).toHaveBeenCalledWith(mockedProject);
+      expect(result).toBe(mockedProject);
+      expect(result.fields.length).toEqual(fields.length);
+    });
+    it('should return project if project fields is null', async () => {
+      const id = faker.string.uuid();
+      const fieldId = faker.string.uuid();
+      const fields = null;
+      const mockedProject = projectsFactory.build(
+        {
+          id,
+        },
+        { associations: { fields } },
+      );
+
+      const findOneSpy = jest
+        .spyOn(service, 'findOne')
+        .mockResolvedValueOnce(mockedProject);
+
+      const saveSpy = jest
+        .spyOn(mockProjectRepository, 'save')
+        .mockImplementationOnce((p) => Promise.resolve(p));
+
+      const result = await service.removeField(id, fieldId);
+
+      expect(findOneSpy).toHaveBeenCalledWith(id);
+      expect(saveSpy).not.toHaveBeenCalled();
+      expect(result).toBe(mockedProject);
+      expect(result.fields).toEqual(null);
     });
   });
 });

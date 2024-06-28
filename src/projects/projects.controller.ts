@@ -4,6 +4,7 @@ import {
   Delete,
   Get,
   Param,
+  ParseUUIDPipe,
   Patch,
   Post,
 } from '@nestjs/common';
@@ -11,6 +12,7 @@ import {
 import { CreateProjectDto } from './dto/create-project.dto';
 import { UpdateProjectDto } from './dto/update-project.dto';
 import { ProjectsService } from './projects.service';
+import { CreateProjectFieldDto } from './dto/create-project-field.dto';
 
 @Controller()
 export class ProjectsController {
@@ -27,17 +29,41 @@ export class ProjectsController {
   }
 
   @Get(':id')
-  findOne(@Param('id') id: string) {
+  findOne(@Param('id', ParseUUIDPipe) id: string) {
     return this.projectsService.findOne(id);
   }
 
   @Patch(':id')
-  update(@Param('id') id: string, @Body() updateProjectDto: UpdateProjectDto) {
+  update(
+    @Param('id', ParseUUIDPipe) id: string,
+    @Body() updateProjectDto: UpdateProjectDto,
+  ) {
     return this.projectsService.update(id, updateProjectDto);
   }
 
   @Delete(':id')
-  remove(@Param('id') id: string) {
+  remove(@Param('id', ParseUUIDPipe) id: string) {
     return this.projectsService.remove(id);
+  }
+
+  @Post('/:projectId/fields')
+  addField(
+    @Param('projectId', ParseUUIDPipe) projectId: string,
+    @Body() createProjectFieldDto: CreateProjectFieldDto,
+  ) {
+    return this.projectsService.addField(projectId, createProjectFieldDto);
+  }
+
+  @Get('/:projectId/fields')
+  findAllFields(@Param('projectId', ParseUUIDPipe) projectId: string) {
+    return this.projectsService.findAllFields(projectId);
+  }
+
+  @Delete('/:projectId/fields/:fieldId')
+  removeField(
+    @Param('projectId', ParseUUIDPipe) projectId: string,
+    @Param('fieldId', ParseUUIDPipe) fieldId: string,
+  ) {
+    return this.projectsService.removeField(projectId, fieldId);
   }
 }

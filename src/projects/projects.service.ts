@@ -1,14 +1,16 @@
-import { Inject, Injectable } from '@nestjs/common';
+import { BadRequestException, Inject, Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { REQUEST } from '@nestjs/core';
 
 import { UsersService } from '../users/users.service';
 import { WithOwnerService } from '../common/WithOwnerService';
+import { FieldsService } from '../fields/fields.service';
 
 import { CreateProjectDto } from './dto/create-project.dto';
 import { UpdateProjectDto } from './dto/update-project.dto';
 import { Project } from './entities/project.entity';
+import { CreateProjectFieldDto } from './dto/create-project-field.dto';
 
 @Injectable()
 export class ProjectsService extends WithOwnerService {
@@ -16,6 +18,7 @@ export class ProjectsService extends WithOwnerService {
     @InjectRepository(Project) private projectsRepository: Repository<Project>,
     @Inject(REQUEST) protected request: Request,
     @Inject(UsersService) protected usersService: UsersService,
+    @Inject(FieldsService) protected fieldsService: FieldsService,
   ) {
     super(request, usersService);
   }
@@ -38,7 +41,10 @@ export class ProjectsService extends WithOwnerService {
   async findOne(id: string) {
     const { id: ownerId } = await this.getOwner();
 
-    return this.projectsRepository.findOneBy({ id, owner: { id: ownerId } });
+    return this.projectsRepository.findOne({
+      where: { id, owner: { id: ownerId } },
+      relations: ['fields'],
+    });
   }
 
   async update(id: string, updateProjectDto: UpdateProjectDto) {
@@ -69,5 +75,38 @@ export class ProjectsService extends WithOwnerService {
     }
 
     return result;
+  }
+
+  async addField(id: string, createProjectFieldDto: CreateProjectFieldDto) {
+    const project = await this.findOne(id);
+
+    if (!project) {
+      throw new BadRequestException(`Project with id ${id} not found`);
+    }
+
+    const fieldId = createProjectFieldDto.fieldId;
+    const field = await this.fieldsService.findOne(fieldId);
+
+    if (!field) {
+      throw new BadRequestException(`Field with id ${fieldId} not found`);
+    }
+
+    if (!Array.isArray(project.fields)) project.fields = [field];
+    else if (!project.fields.find((field) => field.id === fieldId)) {
+      project.fields.push(field);
+    }
+
+    return this.projectsRepository.save(project);
+  }
+
+  async findAllFields(id: string) {
+    return (await this.findOne(id)).fields || [];
+  }
+
+  async removeField(id: string, fieldId: string) {
+    const project = await this.findOne(id);
+    if (!project.fields || !project.fields.length) return project;
+    project.fields = project.fields.filter((field) => field.id !== fieldId);
+    return this.projectsRepository.save(project);
   }
 }
