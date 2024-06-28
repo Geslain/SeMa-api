@@ -11,6 +11,7 @@ import { AuthGuard } from './auth/auth.guard';
 import { TypeOrmModule } from './common/datasource/datasource.module';
 import { DataRowFieldModule } from './projects/data-row/data-row-field/data-row-field.module';
 import { DataRowModule } from './projects/data-row/data-row.module';
+import { DevicesModule } from './devices/devices.module';
 
 @Module({
   imports: [
@@ -21,6 +22,7 @@ import { DataRowModule } from './projects/data-row/data-row.module';
     AuthModule,
     DataRowFieldModule,
     DataRowModule,
+    DevicesModule,
     RouterModule.register([
       {
         path: 'projects',
