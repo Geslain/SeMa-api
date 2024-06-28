@@ -20,6 +20,13 @@ export class Project extends BaseEntity {
   @Column({ type: 'varchar' })
   name: string;
 
+  @ApiProperty({
+    example: 'Hello mister {lastname} {firstname}',
+    description: 'Template for sending messages',
+  })
+  @Column({ type: 'text', nullable: true })
+  messageTemplate?: string;
+
   @OneToMany(
     /* istanbul ignore next */ () => DataRow,
     /* istanbul ignore next */ (dataRow) => dataRow.project,

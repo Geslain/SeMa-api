@@ -11,4 +11,8 @@ export class CreateProjectDto {
   @IsUUID()
   @IsOptional()
   deviceId?: string;
+
+  @ApiProperty()
+  @IsOptional()
+  messageTemplate?: string;
 }

@@ -8,6 +8,7 @@ import { dataRowsFactory } from '../data-row/factories/data-rows.factory';
 
 export const projectsDtoFactory = Factory.define<CreateProjectDto>(() => ({
   name: faker.word.noun(),
+  messageTemplate: faker.lorem.paragraph(),
 }));
 
 export const projectsFactory = Factory.define<Project>(({ associations }) => ({

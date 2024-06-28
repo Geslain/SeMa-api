@@ -82,6 +82,7 @@ describe('ProjectsService', () => {
       const mockProject = new Project();
       mockProject.owner = owner;
       mockProject.name = mockProjectCreateDto.name;
+      mockProject.messageTemplate = mockProjectCreateDto.messageTemplate;
       mockProject.dataRows = [];
 
       jest
@@ -170,6 +171,7 @@ describe('ProjectsService', () => {
       const mockedProject = projectsFactory.build();
 
       mockedProject.name = mockProjectUpdateDto.name;
+      mockedProject.messageTemplate = mockProjectUpdateDto.messageTemplate;
 
       jest
         .spyOn(mockProjectRepository, 'findOneBy')

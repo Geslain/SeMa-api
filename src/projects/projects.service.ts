@@ -27,9 +27,10 @@ export class ProjectsService extends WithOwnerService {
 
   async create(createProjectDto: CreateProjectDto) {
     const project = new Project();
-    const { deviceId, name } = createProjectDto;
+    const { deviceId, name, messageTemplate } = createProjectDto;
     project.owner = await this.getOwner();
     project.name = name;
+    project.messageTemplate = messageTemplate;
     project.dataRows = [];
 
     await this.addDevice(deviceId, project);
@@ -54,7 +55,7 @@ export class ProjectsService extends WithOwnerService {
 
   async update(id: string, updateProjectDto: UpdateProjectDto) {
     const { id: ownerId } = await this.getOwner();
-    const { deviceId, name } = updateProjectDto;
+    const { deviceId, name, messageTemplate } = updateProjectDto;
     const project = await this.projectsRepository.findOneBy({
       id,
       owner: { id: ownerId },
@@ -63,6 +64,7 @@ export class ProjectsService extends WithOwnerService {
     if (!project) return null;
 
     project.name = name;
+    project.messageTemplate = messageTemplate;
 
     await this.addDevice(deviceId, project);
 
