@@ -4,6 +4,7 @@ import {
   Delete,
   Get,
   Param,
+  ParseUUIDPipe,
   Patch,
   Post,
 } from '@nestjs/common';
@@ -18,33 +19,39 @@ export class DataRowController {
 
   @Post()
   create(
-    @Param('projectId') projectId: string,
+    @Param('projectId', ParseUUIDPipe) projectId: string,
     @Body() createDataRowDto: CreateDataRowDto,
   ) {
     return this.dataRowService.create(projectId, createDataRowDto);
   }
 
   @Get()
-  findAll(@Param('projectId') projectId: string) {
+  findAll(@Param('projectId', ParseUUIDPipe) projectId: string) {
     return this.dataRowService.findAll(projectId);
   }
 
   @Get(':id')
-  findOne(@Param('projectId') projectId: string, @Param('id') id: string) {
+  findOne(
+    @Param('projectId', ParseUUIDPipe) projectId: string,
+    @Param('id', ParseUUIDPipe) id: string,
+  ) {
     return this.dataRowService.findOne(projectId, id);
   }
 
   @Patch(':id')
   update(
-    @Param('projectId') projectId: string,
-    @Param('id') id: string,
+    @Param('projectId', ParseUUIDPipe) projectId: string,
+    @Param('id', ParseUUIDPipe) id: string,
     @Body() updateDataRowDto: UpdateDataRowDto,
   ) {
     return this.dataRowService.update(projectId, id, updateDataRowDto);
   }
 
   @Delete(':id')
-  remove(@Param('projectId') projectId: string, @Param('id') id: string) {
+  remove(
+    @Param('projectId', ParseUUIDPipe) projectId: string,
+    @Param('id', ParseUUIDPipe) id: string,
+  ) {
     return this.dataRowService.remove(projectId, id);
   }
 }
