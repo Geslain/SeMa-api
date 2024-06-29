@@ -36,7 +36,7 @@ export class ProjectsService extends WithOwnerService {
     project.messageTemplate = messageTemplate;
     project.dataRows = [];
 
-    await this.addDevice(deviceId, project);
+    await this.handleDevice(deviceId, project);
 
     return this.projectsRepository.save(project);
   }
@@ -57,19 +57,15 @@ export class ProjectsService extends WithOwnerService {
   }
 
   async update(id: string, updateProjectDto: UpdateProjectDto) {
-    const { id: ownerId } = await this.getOwner();
     const { deviceId, name, messageTemplate } = updateProjectDto;
-    const project = await this.projectsRepository.findOneBy({
-      id,
-      owner: { id: ownerId },
-    });
+    const project = await this.findOne(id);
 
     if (!project) return null;
 
     project.name = name;
     project.messageTemplate = messageTemplate;
 
-    await this.addDevice(deviceId, project);
+    await this.handleDevice(deviceId, project);
 
     return this.projectsRepository.save(project);
   }
@@ -122,13 +118,15 @@ export class ProjectsService extends WithOwnerService {
     return this.projectsRepository.save(project);
   }
 
-  protected async addDevice(deviceId: string, project: Project) {
+  protected async handleDevice(deviceId: string, project: Project) {
     if (deviceId) {
       const device = await this.devicesService.findOne(deviceId);
       if (!device)
         throw new BadRequestException(`No device found with id ${deviceId}`);
 
       project.device = device;
+    } else if (deviceId === null && project.device) {
+      project.device = null;
     }
     return project;
   }
