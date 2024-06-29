@@ -20,6 +20,7 @@ describe('ProjectsController', () => {
     update: jest.fn(),
     findOne: jest.fn(),
     remove: jest.fn(),
+    sendMessages: jest.fn(),
     addField: jest.fn(),
     findAllFields: jest.fn(),
     removeField: jest.fn(),
@@ -106,6 +107,21 @@ describe('ProjectsController', () => {
       const result = await controller.remove(projectId);
       expect(remove).toHaveBeenCalledWith(projectId);
       expect(result).toEqual(null);
+    });
+  });
+
+  describe('sendMessages()', () => {
+    it('should send messages', async () => {
+      const projectId = faker.string.uuid();
+      const response = { status: 'ok' };
+
+      const sendMessagesSpy = jest
+        .spyOn(service, 'sendMessages')
+        .mockResolvedValueOnce(response);
+
+      const result = await controller.sendMessages(projectId);
+      expect(sendMessagesSpy).toHaveBeenCalledWith(projectId);
+      expect(result).toEqual(response);
     });
   });
 
