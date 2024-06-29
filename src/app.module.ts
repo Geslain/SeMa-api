@@ -1,5 +1,8 @@
+import * as process from 'node:process';
+
 import { Module } from '@nestjs/common';
 import { APP_GUARD, RouterModule } from '@nestjs/core';
+import { BullModule } from '@nestjs/bull';
 
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
@@ -41,6 +44,12 @@ import { DevicesModule } from './devices/devices.module';
         ],
       },
     ]),
+    BullModule.forRoot({
+      redis: {
+        host: process.env.REDIS_HOST,
+        port: process.env.REDIS_PORT,
+      },
+    }),
   ],
   controllers: [AppController],
   providers: [

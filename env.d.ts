@@ -7,5 +7,7 @@ namespace NodeJS {
     DATABASE_USERNAME: string;
     DATABASE_PASSWORD: string;
     DATABASE_NAME: string;
+    REDIS_HOST: string;
+    REDIS_PORT: number;
   }
 }
