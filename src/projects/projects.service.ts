@@ -2,6 +2,8 @@ import { BadRequestException, Inject, Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { REQUEST } from '@nestjs/core';
+import { InjectQueue } from '@nestjs/bull';
+import { Queue } from 'bull';
 
 import { UsersService } from '../users/users.service';
 import { WithOwnerService } from '../common/WithOwnerService';
@@ -21,6 +23,7 @@ export class ProjectsService extends WithOwnerService {
     @Inject(UsersService) protected usersService: UsersService,
     @Inject(FieldsService) protected fieldsService: FieldsService,
     @Inject(DevicesService) protected devicesService: DevicesService,
+    @InjectQueue('message') private messageQueue: Queue,
   ) {
     super(request, usersService);
   }
@@ -49,7 +52,7 @@ export class ProjectsService extends WithOwnerService {
 
     return this.projectsRepository.findOne({
       where: { id, owner: { id: ownerId } },
-      relations: ['fields'],
+      relations: ['fields', 'device', 'dataRows'],
     });
   }
 
@@ -128,5 +131,35 @@ export class ProjectsService extends WithOwnerService {
       project.device = device;
     }
     return project;
+  }
+
+  async sendMessages(projectId: string) {
+    const { messageTemplate, fields, dataRows, device } =
+      await this.findOne(projectId);
+
+    if (!messageTemplate) {
+      throw new BadRequestException(`Message template cannot be null`);
+    }
+
+    if (!device) {
+      throw new BadRequestException(`No device configured`);
+    }
+
+    if (!dataRows || !dataRows.length) {
+      throw new BadRequestException(`No data to send`);
+    }
+
+    if (!fields.find((f) => f.name === 'phone')) {
+      throw new BadRequestException(`Missing required field 'phone'`);
+    }
+
+    await this.messageQueue.add('send-messages', {
+      template: messageTemplate,
+      dataRows,
+      fields,
+      device,
+    });
+
+    return { status: 'sent' };
   }
 }

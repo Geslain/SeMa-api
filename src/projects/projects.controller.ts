@@ -68,4 +68,10 @@ export class ProjectsController {
   ) {
     return this.projectsService.removeField(projectId, fieldId);
   }
+
+  // SendMessage
+  @Post('/:projectId/send-messages')
+  sendMessages(@Param('projectId', ParseUUIDPipe) projectId: string) {
+    return this.projectsService.sendMessages(projectId);
+  }
 }
