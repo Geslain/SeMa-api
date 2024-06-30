@@ -108,12 +108,15 @@ export class ProjectsService extends WithOwnerService {
   }
 
   async findAllFields(id: string) {
-    return (await this.findOne(id)).fields || [];
+    const project = await this.findOne(id);
+
+    if (!project || !project.fields) return [];
+    return project.fields;
   }
 
   async removeField(id: string, fieldId: string) {
     const project = await this.findOne(id);
-    if (!project.fields || !project.fields.length) return project;
+    if (!project || !project.fields || !project.fields.length) return project;
     project.fields = project.fields.filter((field) => field.id !== fieldId);
     return this.projectsRepository.save(project);
   }
@@ -133,6 +136,9 @@ export class ProjectsService extends WithOwnerService {
 
   async sendMessages(projectId: string) {
     const project = await this.findOne(projectId);
+
+    if (!project) return null;
+
     const { messageTemplate, fields, dataRows, device } = project;
 
     if (!messageTemplate) {

@@ -436,15 +436,17 @@ describe('ProjectsService', () => {
         { associations: { fields: null } },
       );
 
-      const findOneSpy = jest
-        .spyOn(service, 'findOne')
-        .mockResolvedValueOnce(mockedProject);
+      for (const value of [mockedProject, null]) {
+        const findOneSpy = jest
+          .spyOn(service, 'findOne')
+          .mockResolvedValueOnce(value);
 
-      const result = await service.findAllFields(id);
+        const result = await service.findAllFields(id);
 
-      expect(findOneSpy).toHaveBeenCalledWith(id);
-      expect(isArray(result)).toBe(true);
-      expect(result.length).toEqual(0);
+        expect(findOneSpy).toHaveBeenCalledWith(id);
+        expect(isArray(result)).toBe(true);
+        expect(result.length).toEqual(0);
+      }
     });
   });
   describe('removeField()', () => {
@@ -535,6 +537,19 @@ describe('ProjectsService', () => {
     const sendMessageSpy = jest.spyOn(mockQueue, 'add');
     afterEach(() => {
       jest.resetAllMocks();
+    });
+
+    it('Should return null', async () => {
+      const projectId = faker.string.uuid();
+      const findOneSpy = jest
+        .spyOn(service, 'findOne')
+        .mockResolvedValueOnce(null);
+
+      const result = await service.sendMessages(projectId);
+
+      expect(findOneSpy).toHaveBeenCalledWith(projectId);
+      expect(result).toBe(null);
+      expect(sendMessageSpy).not.toHaveBeenCalled();
     });
 
     it('Should throw error if template is missing', async () => {
