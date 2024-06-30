@@ -9,5 +9,6 @@ namespace NodeJS {
     DATABASE_NAME: string;
     REDIS_HOST: string;
     REDIS_PORT: number;
+    ENABLE_MESSAGING: string;
   }
 }

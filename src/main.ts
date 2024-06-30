@@ -5,6 +5,7 @@ import {
 } from '@nestjs/common';
 import { NestFactory, Reflector } from '@nestjs/core';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
+import { ConfigService } from '@nestjs/config';
 
 import { AppModule } from './app.module';
 import { NotFoundInterceptor } from './common/interceptors/not-found.interceptor';
@@ -13,19 +14,21 @@ import { Field } from './fields/entities/field.entity';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
+  const config: ConfigService = app.get(ConfigService);
+
   app.useGlobalPipes(
     new ValidationPipe({
       stopAtFirstError: true,
     }),
   );
 
-  const config = new DocumentBuilder()
+  const swaggerConfig = new DocumentBuilder()
     .setTitle('SeMa Api')
     .setDescription('The SeMa Api description')
     .setVersion('1.0')
     .build();
 
-  const document = SwaggerModule.createDocument(app, config, {
+  const document = SwaggerModule.createDocument(app, swaggerConfig, {
     extraModels: [BaseEntity, Field],
   });
   SwaggerModule.setup('api', app, document);
@@ -38,6 +41,6 @@ async function bootstrap() {
   app.useGlobalInterceptors(new NotFoundInterceptor());
   app.useGlobalInterceptors(new ClassSerializerInterceptor(app.get(Reflector)));
 
-  await app.listen(3000);
+  await app.listen(config.get('port'));
 }
 bootstrap();

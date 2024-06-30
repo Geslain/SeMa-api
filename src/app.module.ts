@@ -1,8 +1,8 @@
-import * as process from 'node:process';
-
 import { Module } from '@nestjs/common';
 import { APP_GUARD, RouterModule } from '@nestjs/core';
 import { BullModule } from '@nestjs/bull';
+import { ConfigModule, ConfigService } from '@nestjs/config';
+import { TypeOrmModule } from '@nestjs/typeorm';
 
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
@@ -11,14 +11,20 @@ import { ProjectsModule } from './projects/projects.module';
 import { UsersModule } from './users/users.module';
 import { AuthModule } from './auth/auth.module';
 import { AuthGuard } from './auth/auth.guard';
-import { TypeOrmModule } from './common/datasource/datasource.module';
 import { DataRowFieldModule } from './projects/data-row/data-row-field/data-row-field.module';
 import { DataRowModule } from './projects/data-row/data-row.module';
 import { DevicesModule } from './devices/devices.module';
+import configuration from './common/config/configuration';
+import { typeOrmAsyncConfig } from './common/datasource/datasource.constants';
 
 @Module({
   imports: [
-    TypeOrmModule,
+    ConfigModule.forRoot({
+      isGlobal: true,
+      load: [configuration],
+    }),
+    ConfigModule,
+    TypeOrmModule.forRootAsync(typeOrmAsyncConfig),
     UsersModule,
     ProjectsModule,
     FieldsModule,
@@ -44,11 +50,15 @@ import { DevicesModule } from './devices/devices.module';
         ],
       },
     ]),
-    BullModule.forRoot({
-      redis: {
-        host: process.env.REDIS_HOST,
-        port: process.env.REDIS_PORT,
-      },
+    BullModule.forRootAsync({
+      imports: [ConfigModule],
+      useFactory: async (configService: ConfigService) => ({
+        redis: {
+          host: configService.get('REDIS_HOST'),
+          port: configService.get('REDIS_PORT'),
+        },
+      }),
+      inject: [ConfigService],
     }),
   ],
   controllers: [AppController],

@@ -38,7 +38,8 @@ services:
       - DATABASE_PASSWORD=${DATABASE_PASSWORD}
       - DATABASE_HOST=${DATABASE_HOST}
       - DATABASE_NAME=${DATABASE_NAME}
-      - SECRET=${SECRET}
+      - ENABLE_MESSAGING=${ENABLE_MESSAGING}
+      - JWT_SECRET=${JWT_SECRET}
     ports:
       - ${API_PORT}:3000
     volumes:

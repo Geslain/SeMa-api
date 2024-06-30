@@ -19,9 +19,10 @@
     "test:debug": "node --inspect-brk -r tsconfig-paths/register -r ts-node/register node_modules/.bin/jest --runInBand",
     "test:e2e": "NODE_ENV=test jest --config ./test/jest-e2e.json --verbose --runInBand",
     "prepare": "husky",
-    "migration:generate": "DATABASE_HOST=localhost DATABASE_PORT=5432 typeorm-ts-node-commonjs migration:generate -d src/common/datasource/datasource.constants.ts",
-    "migration:run": "DATABASE_HOST=localhost DATABASE_PORT=5432 typeorm-ts-node-commonjs migration:run -d src/common/datasource/datasource.constants.ts",
-    "migration:revert": "DATABASE_HOST=localhost DATABASE_PORT=5432 typeorm-ts-node-commonjs migration:revert -d src/common/datasource/datasource.constants.ts"
+    "typeorm" : "DATABASE_HOST=localhost DATABASE_PORT=5432 typeorm-ts-node-commonjs -d src/common/datasource/datasource.constants.ts",
+    "migration:generate": "yarn typeorm migration:generate",
+    "migration:run": "yarn typeorm migration:run",
+    "migration:revert": "yarn typeorm migration:revert"
   },
   "lint-staged": {
     "{src,test}/**/*.ts": [
@@ -35,6 +36,7 @@
     "@nestjs/axios": "^3.0.2",
     "@nestjs/bull": "^10.1.1",
     "@nestjs/common": "^10.0.0",
+    "@nestjs/config": "^3.2.2",
     "@nestjs/core": "^10.0.0",
     "@nestjs/jwt": "^10.2.0",
     "@nestjs/mapped-types": "*",
@@ -67,7 +69,6 @@
     "@types/supertest": "^6.0.0",
     "@typescript-eslint/eslint-plugin": "^6.0.0",
     "@typescript-eslint/parser": "^6.0.0",
-    "dotenv": "^16.4.5",
     "eslint": "^8.42.0",
     "eslint-config-prettier": "^9.0.0",
     "eslint-import-resolver-typescript": "^3.6.1",
