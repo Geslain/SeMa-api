@@ -624,12 +624,10 @@ describe('ProjectsService', () => {
 
       const result = await service.sendMessages(projectId);
 
-      expect(sendMessageSpy).toHaveBeenCalledWith('send-messages', {
-        template: mockedProject.messageTemplate,
-        dataRows: mockedProject.dataRows,
-        fields: mockedProject.fields,
-        device: mockedProject.device,
-      });
+      expect(sendMessageSpy).toHaveBeenCalledWith(
+        'send-messages',
+        mockedProject,
+      );
 
       expect(findOneSpy).toHaveBeenCalledWith(projectId);
       expect(result).toStrictEqual({ status: 'sent' });

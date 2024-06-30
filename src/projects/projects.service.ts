@@ -132,8 +132,8 @@ export class ProjectsService extends WithOwnerService {
   }
 
   async sendMessages(projectId: string) {
-    const { messageTemplate, fields, dataRows, device } =
-      await this.findOne(projectId);
+    const project = await this.findOne(projectId);
+    const { messageTemplate, fields, dataRows, device } = project;
 
     if (!messageTemplate) {
       throw new BadRequestException(`Message template cannot be null`);
@@ -151,12 +151,7 @@ export class ProjectsService extends WithOwnerService {
       throw new BadRequestException(`Missing required field 'phone'`);
     }
 
-    await this.messageQueue.add('send-messages', {
-      template: messageTemplate,
-      dataRows,
-      fields,
-      device,
-    });
+    await this.messageQueue.add('send-messages', project);
 
     return { status: 'sent' };
   }
