@@ -4,7 +4,7 @@
 
 ## Description
 
-SeMa project management Api of [SeMa](https://github.com/Geslain/SeMa-api) project. It has been created from [NestJS](http://nestjs.com/) project
+SeMa project management Api of [SeMa](https://github.com/Geslain/SeMa) project. It has been created from [NestJS](http://nestjs.com/) project
 
 ## Installation
 
