@@ -2,10 +2,11 @@ import { Process, Processor } from '@nestjs/bull';
 import { Logger } from '@nestjs/common';
 import { Job } from 'bull';
 import { HttpService } from '@nestjs/axios';
-import { firstValueFrom } from 'rxjs';
-import { AxiosError } from 'axios';
 import { ConfigService } from '@nestjs/config';
 import { isArray } from 'class-validator';
+import { cert, initializeApp } from 'firebase-admin/app';
+import { FirebaseMessagingError, getMessaging } from 'firebase-admin/messaging';
+import { ServiceAccount } from 'firebase-admin/lib/app/credential';
 
 import { Field } from '../fields/entities/field.entity';
 import { Device } from '../devices/entities/device.entity';
@@ -18,7 +19,26 @@ export class MessageProcessor {
   constructor(
     private readonly httpService: HttpService,
     private readonly config: ConfigService,
-  ) {}
+  ) {
+    const firebaseAdminConfig = {
+      credential: cert({
+        type: 'service_account',
+        project_id: this.config.get('firebase.project_id'),
+        private_key_id: this.config.get('firebase.private_key_id'),
+        private_key: this.config.get('firebase.private_key'),
+        client_email: this.config.get('firebase.client_email'),
+        client_id: this.config.get('firebase.client_id'),
+        auth_uri: 'https://accounts.google.com/o/oauth2/auth',
+        token_uri: 'https://oauth2.googleapis.com/token',
+        auth_provider_x509_cert_url:
+          'https://www.googleapis.com/oauth2/v1/certs',
+        client_x509_cert_url: this.config.get('firebase.client_x509_cert_url'),
+        universe_domain: 'googleapis.com',
+      } as ServiceAccount),
+    };
+
+    initializeApp(firebaseAdminConfig);
+  }
 
   private readonly logger = new Logger(MessageProcessor.name);
 
@@ -40,8 +60,6 @@ export class MessageProcessor {
         return;
       }
 
-      const url = 'https://api.pushbullet.com/v2/texts';
-
       this.logger.log('Start sending...');
 
       for (const dataRow of dataRows) {
@@ -56,26 +74,27 @@ export class MessageProcessor {
           continue;
         }
 
-        const { options, data } = this.buildRequest(row, device, message);
+        const payload = this.buildPayload(row, device, message);
 
         if (this.config.get('enableMessaging')) {
-          const {
-            data: response,
-            status,
-            statusText,
-          } = await firstValueFrom(this.httpService.post(url, data, options));
-          this.logger.log(response, status, statusText);
+          const response = await getMessaging().send(payload);
+          this.logger.log(
+            `Successfully Send "${message}" to ${row.phone} (Firebase: ${response})`,
+          );
+        } else {
+          this.logger.warn(
+            `Attempt to send message (${row.phone}) but message sending is disabled`,
+          );
         }
-
-        this.logger.log(`Send "${message}" to ${row.phone}`);
       }
 
       this.logger.log('Sending completed');
     } catch (e) {
       this.logger.error(e);
       this.logger.error('Stack:', e.stack);
-      if (e instanceof AxiosError) {
-        this.logger.error('Response:', e.response.data);
+      if (e instanceof FirebaseMessagingError) {
+        this.logger.error('Firebase error code:', e.code);
+        this.logger.error('Firebase error message:', e.message);
       }
     }
   }
@@ -147,33 +166,24 @@ export class MessageProcessor {
   }
 
   /**
-   * Build header and body for request
+   * Build Firebase message payload
    *
    * @param row
    * @param device
    * @param message
    * @private
    */
-  private buildRequest(
+  private buildPayload(
     row: Record<string, any>,
     device: Device,
     message: string,
   ) {
-    const data = {
+    return {
       data: {
-        addresses: [row.phone],
-        message,
-        target_device_iden: device.deviceId,
+        phone: row.phone,
+        body: message,
       },
+      token: device.deviceId,
     };
-    const options = {
-      method: 'post',
-      contentType: 'application/json',
-      headers: {
-        'Access-Token': device.accessToken,
-      },
-      payload: JSON.stringify(data),
-    };
-    return { options, data };
   }
 }

@@ -24,7 +24,7 @@
     "test:debug": "node --inspect-brk -r tsconfig-paths/register -r ts-node/register node_modules/.bin/jest --runInBand",
     "test:e2e": "NODE_ENV=test jest --config ./test/jest-e2e.json --verbose --runInBand",
     "prepare": "husky",
-    "typeorm" : "DATABASE_HOST=localhost DATABASE_PORT=5432 typeorm-ts-node-commonjs -d src/common/datasource/datasource.constants.ts",
+    "typeorm": "DATABASE_HOST=localhost DATABASE_PORT=5432 typeorm-ts-node-commonjs -d src/common/datasource/datasource.constants.ts",
     "migration:generate": "yarn typeorm migration:generate",
     "migration:run": "yarn typeorm migration:run",
     "migration:revert": "yarn typeorm migration:revert"
@@ -53,6 +53,7 @@
     "bull": "^4.14.0",
     "class-transformer": "^0.5.1",
     "class-validator": "^0.14.1",
+    "firebase-admin": "^12.5.0",
     "pg": "^8.11.5",
     "reflect-metadata": "^0.2.0",
     "rxjs": "^7.8.1",

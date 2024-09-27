@@ -1,8 +1,9 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { HttpService } from '@nestjs/axios';
-import { of } from 'rxjs';
 import { ConfigService } from '@nestjs/config';
-import { AxiosError, AxiosHeaders } from 'axios';
+import * as admin from 'firebase-admin/app';
+import * as messaging from 'firebase-admin/messaging';
+import { faker } from '@faker-js/faker';
 
 import { devicesFactory } from '../devices/factories/devices.factory';
 import { fieldsFactory } from '../fields/factories/fields.factory';
@@ -12,11 +13,38 @@ import { projectsFactory } from './factories/projects.factory';
 import { dataRowsFactory } from './data-row/factories/data-rows.factory';
 import { dataRowFieldsFactory } from './data-row/data-row-field/factories/data-row-fields.factory';
 
+jest.mock('firebase-admin/app', () => ({
+  ...jest.requireActual('firebase-admin/app'),
+  cert: jest.fn(),
+  initializeApp: jest.fn(),
+}));
+
+jest.mock('firebase-admin/messaging', () => ({
+  ...jest.requireActual('firebase-admin/messaging'),
+  FirebaseMessagingError: jest.fn(),
+  getMessaging: jest.fn(),
+}));
+
 describe('MessageProcessor', () => {
   let processor;
-  const apiUrl = 'https://api.pushbullet.com/v2/texts';
-  const mockHttpService = {
+  const mockHttpService: Partial<HttpService> = {
     post: jest.fn(),
+  };
+  const mockConfigService: Partial<
+    ConfigService<Record<string, unknown>, false>
+  > = {
+    get: jest.fn((key: string) => {
+      return { ...mockFirebaseConfig, enableMessaging: true }[key];
+    }),
+  };
+
+  const mockFirebaseConfig = {
+    'firebase.project_id': faker.string.sample(),
+    'firebase.private_key_id': faker.string.sample(),
+    'firebase.private_key': faker.string.sample(),
+    'firebase.client_email': faker.string.sample(),
+    'firebase.client_id': faker.string.sample(),
+    'firebase.client_x509_cert_url': faker.string.sample(),
   };
 
   beforeEach(async () => {
@@ -29,19 +57,42 @@ describe('MessageProcessor', () => {
         },
         {
           provide: ConfigService,
-          useValue: {
-            get: jest.fn((key: string) => {
-              return { enableMessaging: true }[key];
-            }),
-          },
+          useValue: mockConfigService,
         },
       ],
     }).compile();
     processor = module.get(MessageProcessor);
+    jest.clearAllMocks();
   });
 
   it('Should be defined', () => {
     expect(processor).toBeDefined();
+  });
+
+  describe('constructor()', () => {
+    it('Should initialize firebase', async () => {
+      new MessageProcessor(
+        mockHttpService as HttpService,
+        mockConfigService as ConfigService<Record<string, unknown>, false>,
+      );
+
+      expect(admin.initializeApp).toHaveBeenCalledTimes(1);
+      expect(admin.cert).toHaveBeenCalledWith({
+        type: 'service_account',
+        project_id: mockFirebaseConfig['firebase.project_id'],
+        private_key_id: mockFirebaseConfig['firebase.private_key_id'],
+        private_key: mockFirebaseConfig['firebase.private_key'],
+        client_email: mockFirebaseConfig['firebase.client_email'],
+        client_id: mockFirebaseConfig['firebase.client_id'],
+        auth_uri: 'https://accounts.google.com/o/oauth2/auth',
+        token_uri: 'https://oauth2.googleapis.com/token',
+        auth_provider_x509_cert_url:
+          'https://www.googleapis.com/oauth2/v1/certs',
+        client_x509_cert_url:
+          mockFirebaseConfig['firebase.client_x509_cert_url'],
+        universe_domain: 'googleapis.com',
+      });
+    });
   });
 
   describe('sendMessages()', () => {
@@ -134,47 +185,37 @@ describe('MessageProcessor', () => {
         messageTemplate,
       });
 
-      const postSpy = jest.spyOn(mockHttpService, 'post').mockReturnValueOnce(
-        of({
-          status: 200,
-          statusText: 'OK',
-          data: {},
-        }),
-      );
       const warnLoggerSpy = jest.spyOn(processor.logger, 'warn');
       const logLoggerSpy = jest.spyOn(processor.logger, 'log');
 
-      const mockedOptions = { foo: 'bar' };
       const mockedData = { bar: 'foo' };
+
+      const firebaseSendReturnMock = 'foobar barfoo';
+      const sendMock = jest.fn().mockReturnValue(firebaseSendReturnMock);
+
+      (messaging.getMessaging as jest.Mock).mockImplementation(() => ({
+        send: sendMock,
+      }));
 
       const buildRowSpy = jest.spyOn(processor, 'buildRow');
       const buildMessageSpy = jest.spyOn(processor, 'buildMessage');
-      const buildRequestSpy = jest
-        .spyOn(processor, 'buildRequest')
-        .mockImplementationOnce(() => ({
-          options: mockedOptions,
-          data: mockedData,
-        }));
+      const buildPayloadSpy = jest
+        .spyOn(processor, 'buildPayload')
+        .mockImplementationOnce(() => mockedData);
 
       await processor.sendMessages({ data });
 
       expect(buildRowSpy).toHaveBeenCalledTimes(3);
       expect(buildMessageSpy).toHaveBeenCalledTimes(3);
-      expect(buildRequestSpy).toHaveBeenCalledTimes(1);
-      expect(postSpy).toHaveBeenCalledTimes(1);
-      expect(postSpy).toHaveBeenNthCalledWith(
-        1,
-        apiUrl,
-        mockedData,
-        mockedOptions,
-      );
+      expect(buildPayloadSpy).toHaveBeenCalledTimes(1);
+      expect(sendMock).toHaveBeenCalledTimes(1);
+      expect(sendMock).toHaveBeenNthCalledWith(1, mockedData);
       expect(logLoggerSpy).toHaveBeenNthCalledWith(1, 'Start sending...');
-      expect(logLoggerSpy).toHaveBeenNthCalledWith(2, {}, 200, 'OK');
       expect(logLoggerSpy).toHaveBeenNthCalledWith(
-        3,
-        `Send "${messageTemplate}" to ${dataRows[0].fields[0].value}`,
+        2,
+        `Successfully Send "${messageTemplate}" to ${dataRows[0].fields[0].value} (Firebase: ${firebaseSendReturnMock})`,
       );
-      expect(logLoggerSpy).toHaveBeenNthCalledWith(4, 'Sending completed');
+      expect(logLoggerSpy).toHaveBeenNthCalledWith(3, 'Sending completed');
       expect(warnLoggerSpy).toHaveBeenCalledTimes(2);
       expect(warnLoggerSpy).toHaveBeenNthCalledWith(
         1,
@@ -190,19 +231,7 @@ describe('MessageProcessor', () => {
 
     it('should log errors', async () => {
       const error = new Error('mocked error');
-      const axiosError = new AxiosError(
-        'mocked error',
-        '500',
-        { headers: new AxiosHeaders() },
-        null,
-        {
-          data: 'foo bar',
-          status: 500,
-          statusText: 'KO',
-          headers: new AxiosHeaders(),
-          config: null,
-        },
-      );
+      const firebaseError = new messaging.FirebaseMessagingError('foo');
       const phoneField = fieldsFactory.build({ name: 'phone' });
 
       const fields = [phoneField];
@@ -225,35 +254,45 @@ describe('MessageProcessor', () => {
         messageTemplate,
       });
 
-      const postSpy = jest
-        .spyOn(mockHttpService, 'post')
-        .mockImplementationOnce(() => {
-          throw new Error('mocked error');
-        });
+      const sendMock = jest.fn().mockImplementationOnce(() => {
+        throw new Error('mocked error');
+      });
+
+      (messaging.getMessaging as jest.Mock).mockImplementation(() => ({
+        send: sendMock,
+      }));
 
       const errorLoggerSpy = jest.spyOn(processor.logger, 'error');
 
       // Call send message a first time and throw a simple Error
       await processor.sendMessages({ data });
 
-      expect(postSpy).toHaveBeenCalled();
+      expect(sendMock).toHaveBeenCalled();
       expect(errorLoggerSpy).toHaveBeenCalledWith(error);
       // Check that the axios condition is not triggered
       expect(errorLoggerSpy).not.toHaveBeenCalledWith(
-        'Response:',
-        axiosError.response.data,
+        'Firebase error code:',
+        firebaseError.code,
+      );
+      expect(errorLoggerSpy).not.toHaveBeenCalledWith(
+        'Firebase error message:',
+        firebaseError.message,
       );
 
-      postSpy.mockImplementationOnce(() => {
-        throw axiosError;
+      sendMock.mockImplementationOnce(() => {
+        throw firebaseError;
       });
 
       // Call send message a second time and throw an Axios error
       await processor.sendMessages({ data });
       // Check that the axios condition is triggered
       expect(errorLoggerSpy).toHaveBeenCalledWith(
-        'Response:',
-        axiosError.response.data,
+        'Firebase error code:',
+        firebaseError.code,
+      );
+      expect(errorLoggerSpy).toHaveBeenCalledWith(
+        'Firebase error message:',
+        firebaseError.message,
       );
     });
   });
@@ -348,18 +387,18 @@ describe('MessageProcessor', () => {
     });
   });
 
-  describe('buildRequest()', () => {
-    it('Should return an object with options and data', () => {
+  describe('buildPayload()', () => {
+    it('Should return an firebase payload', () => {
       const row = { phone: '123' };
       const device = devicesFactory.build();
       const message = 'Hello Mr Eric';
-      const result = processor.buildRequest(row, device, message);
+      const result = processor.buildPayload(row, device, message);
 
-      expect(result).toHaveProperty('options');
+      expect(result).toHaveProperty('token');
       expect(result).toHaveProperty('data');
-      expect(result.options.headers['Access-Token']).toBe(device.accessToken);
-      expect(result.data.data.addresses[0]).toBe(row.phone);
-      expect(result.data.data.target_device_iden).toBe(device.deviceId);
+      expect(result.data.phone).toBe(row.phone);
+      expect(result.data.body).toBe(message);
+      expect(result.token).toBe(device.deviceId);
     });
   });
 });
