@@ -1,28 +1,35 @@
-import { User } from './user.entity';
+import { faker } from '@faker-js/faker';
+
+import { usersFactory } from '../factories/users.factory';
 
 describe('User entity', () => {
-  describe('hashPassword', () => {
-    it('should update password', async () => {
-      const user = new User();
-      const password = 'password';
-      user.password = password + '';
+  describe('isValid', () => {
+    it('Should return true if all user info are filled', async () => {
+      const user = usersFactory.build();
 
-      await user.hashPassword();
+      const isValid = user.isValid();
 
-      expect(password).not.toEqual(user.password);
+      expect(isValid).toEqual(true);
     });
-  });
 
-  describe('comparePassword', () => {
-    it('should compare password', async () => {
-      const user = new User();
-      const password = 'password';
-      const wrongPassword = 'wrong_password';
-      user.password = password + '';
+    it('Should return false if user is missing info ', async () => {
+      const user = usersFactory.build();
 
-      await user.hashPassword();
-      expect(await user.comparePassword(wrongPassword)).toBe(false);
-      expect(await user.comparePassword(password)).toBe(true);
+      user.email = '';
+
+      const isValid = user.isValid();
+
+      expect(isValid).toEqual(false);
+
+      user.email = faker.internet.email();
+      user.firstname = '';
+
+      expect(isValid).toEqual(false);
+
+      user.firstname = faker.person.firstName();
+      user.lastname = '';
+
+      expect(isValid).toEqual(false);
     });
   });
 });

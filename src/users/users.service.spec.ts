@@ -36,6 +36,28 @@ describe('UsersService', () => {
     expect(service).toBeDefined();
   });
 
+  describe('initialize()', () => {
+    it('should initialize a new user', async () => {
+      const mockedUserDto = usersDtoFactory.build();
+      const userId = faker.string.uuid();
+      const saveSpy = jest
+        .spyOn(mockUserRepository, 'save')
+        .mockImplementationOnce((user) => {
+          user.id = userId;
+          return Promise.resolve(user);
+        });
+      const newUser = await service.initialize(mockedUserDto);
+
+      const savedUser = new User();
+      savedUser.email = mockedUserDto.email;
+      savedUser.id = userId;
+
+      expect(saveSpy).toHaveBeenCalledWith(savedUser);
+      expect(newUser.email).toEqual(mockedUserDto.email);
+      expect(newUser.id).toBeDefined();
+    });
+  });
+
   describe('create()', () => {
     it('should insert a new user', async () => {
       const mockedUserDto = usersDtoFactory.build();
@@ -50,11 +72,9 @@ describe('UsersService', () => {
       savedUser.email = mockedUserDto.email;
       savedUser.firstname = mockedUserDto.firstname;
       savedUser.lastname = mockedUserDto.lastname;
-      savedUser.password = mockedUserDto.password;
       savedUser.id = userId;
 
       expect(mockUserRepository.save).toHaveBeenNthCalledWith(1, savedUser);
-      expect(newUser.password).toEqual(mockedUserDto.password);
       expect(newUser.firstname).toEqual(mockedUserDto.firstname);
       expect(newUser.lastname).toEqual(mockedUserDto.lastname);
       expect(newUser.email).toEqual(mockedUserDto.email);
@@ -92,10 +112,8 @@ describe('UsersService', () => {
       mockedUser.email = mockedUserDto.email;
       mockedUser.firstname = mockedUserDto.firstname;
       mockedUser.lastname = mockedUserDto.lastname;
-      mockedUser.password = mockedUserDto.password;
 
       expect(mockUserRepository.save).toHaveBeenNthCalledWith(1, mockedUser);
-      expect(updatedUser.password).toEqual(mockedUserDto.password);
       expect(updatedUser.firstname).toEqual(mockedUserDto.firstname);
       expect(updatedUser.lastname).toEqual(mockedUserDto.lastname);
       expect(updatedUser.email).toEqual(mockedUserDto.email);

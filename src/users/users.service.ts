@@ -5,6 +5,7 @@ import { Repository } from 'typeorm';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { User } from './entities/user.entity';
+import { InitializeUserDto } from './dto/initialize-user.dto';
 
 @Injectable()
 export class UsersService {
@@ -12,13 +13,20 @@ export class UsersService {
     @InjectRepository(User) private userRepository: Repository<User>,
   ) {}
 
+  initialize(initializeUserDto: InitializeUserDto) {
+    const user = new User();
+
+    user.email = initializeUserDto.email;
+
+    return this.userRepository.save(user);
+  }
+
   create(createUserDto: CreateUserDto) {
     const user = new User();
 
     user.firstname = createUserDto.firstname;
     user.lastname = createUserDto.lastname;
     user.email = createUserDto.email;
-    user.password = createUserDto.password;
 
     return this.userRepository.save(user);
   }
@@ -37,13 +45,11 @@ export class UsersService {
 
   async update(id: string, updateUserDto: UpdateUserDto) {
     const user = await this.userRepository.findOneBy({ id });
-
     if (!user) return null;
 
-    user.firstname = updateUserDto.firstname;
-    user.lastname = updateUserDto.lastname;
-    user.email = updateUserDto.email;
-    user.password = updateUserDto.password;
+    Object.entries(updateUserDto).forEach(([key, value]) => {
+      if (typeof value !== 'undefined') user[key] = value;
+    });
 
     return this.userRepository.save(user);
   }

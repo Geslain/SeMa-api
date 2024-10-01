@@ -1,7 +1,7 @@
 import { faker } from '@faker-js/faker';
 import * as request from 'supertest';
 
-import { Field, FieldType } from '../src/fields/entities/field.entity';
+import { FieldType } from '../src/fields/entities/field.entity';
 import { fieldsDtoFactory } from '../src/fields/factories/fields.factory';
 
 describe('Field (e2e)', () => {
@@ -122,7 +122,6 @@ describe('Field (e2e)', () => {
     ['post', 'patch'].forEach((protocol) => {
       describe(`/fields (${protocol.toUpperCase()})`, () => {
         let url: string;
-        let field: Field;
         if (protocol === 'patch') {
           beforeEach(async () => {
             const response = await request(global.app.getHttpServer())
@@ -130,7 +129,6 @@ describe('Field (e2e)', () => {
               .send(fieldsDtoFactory.build());
 
             url = `/fields/${response.body.id}`;
-            field = response.body;
           });
 
           it('Should not update unauthorized field attributes', async () => {
@@ -143,9 +141,15 @@ describe('Field (e2e)', () => {
               });
 
             const updatedField = response.body;
+            const statusCode = response.statusCode;
 
-            expect(updatedField.created_at).toBe(field.created_at);
-            expect(updatedField.id).toBe(field.id);
+            expect(statusCode).toBe(400);
+            expect(updatedField.message).toEqual(
+              expect.arrayContaining([
+                'property id should not exist',
+                'property createdAt should not exist',
+              ]),
+            );
           });
         } else {
           url = '/fields/';

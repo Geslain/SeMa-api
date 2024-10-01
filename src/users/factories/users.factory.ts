@@ -9,27 +9,6 @@ export const usersDtoFactory = Factory.define<CreateUserDto>(() => ({
   firstname: faker.person.firstName(),
   lastname: faker.person.lastName(),
   email: faker.internet.email(),
-  password:
-    faker.internet.password({
-      length: 1,
-      pattern: /[A-Z]/,
-    }) +
-    faker.internet.password({
-      length: 1,
-      pattern: /[a-z]/,
-    }) +
-    faker.internet.password({
-      length: 1,
-      pattern: /\d/,
-    }) +
-    faker.internet.password({
-      length: 1,
-      pattern: /[@$!%*?&]/,
-    }) +
-    faker.internet.password({
-      length: 16,
-      pattern: /[A-Za-z\d@$!%*?&]/,
-    }),
 }));
 
 export const usersFactory = Factory.define<User>(() => {

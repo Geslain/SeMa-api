@@ -15,6 +15,8 @@ import {
   ApiTags,
 } from '@nestjs/swagger';
 
+import { UserUpdate } from '../auth/decorator/user-update.decorator';
+
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { User } from './entities/user.entity';
@@ -59,6 +61,7 @@ export class UsersController {
     return this.usersService.findOne(id);
   }
 
+  @UserUpdate()
   @Patch(':id')
   @ApiOperation({ summary: 'Update an user' })
   @ApiResponse({

@@ -12,7 +12,7 @@ import * as request from 'supertest';
 import { AppModule } from '../../src/app.module';
 import { NotFoundInterceptor } from '../../src/common/interceptors/not-found.interceptor';
 import { usersFactory } from '../../src/users/factories/users.factory';
-import { AuthGuard } from '../../src/auth/auth.guard';
+import { JwtGuard } from '../../src/auth/jwt.guard';
 
 module.exports = async () => {
   const user = usersFactory.build();
@@ -26,7 +26,7 @@ module.exports = async () => {
   const moduleFixture = await Test.createTestingModule({
     imports: [AppModule],
   })
-    .overrideProvider(AuthGuard)
+    .overrideProvider(JwtGuard)
     .useClass(
       class AuthGuardMock implements CanActivate {
         async canActivate(context: ExecutionContext) {
@@ -44,6 +44,8 @@ module.exports = async () => {
   app.useGlobalPipes(
     new ValidationPipe({
       stopAtFirstError: true,
+      whitelist: true,
+      forbidNonWhitelisted: true,
     }),
   );
 
@@ -56,6 +58,5 @@ module.exports = async () => {
     firstname: user.firstname,
     lastname: user.lastname,
     email: user.email,
-    password: user.password,
   });
 };

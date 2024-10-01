@@ -7,7 +7,6 @@ import {
 
 import { AuthController } from './auth.controller';
 import { AuthService } from './auth.service';
-import { SignUpDto } from './dto/sign-up.dto';
 import { SignInDto } from './dto/sign-in.dto';
 
 describe('AuthController', () => {
@@ -40,24 +39,10 @@ describe('AuthController', () => {
     expect(controller).toBeDefined();
   });
 
-  describe('sign up', () => {
-    it('should sign up', async () => {
-      const signupDto: SignUpDto = usersDtoFactory.build();
-      const mockedUser = usersFactory.build();
-      const signUpSpy = jest
-        .spyOn(service, 'signUp')
-        .mockResolvedValueOnce(mockedUser);
-      const signedUpUser = await controller.signUp(signupDto);
-
-      expect(signUpSpy).toHaveBeenCalledWith(signupDto);
-      expect(signedUpUser).toEqual(mockedUser);
-    });
-  });
-
   describe('sign in', () => {
     it('should sign in', async () => {
-      const { email, password } = usersDtoFactory.build();
-      const signInDto: SignInDto = { email, password };
+      const { email } = usersDtoFactory.build();
+      const signInDto: SignInDto = { email };
       const mockedUser = usersFactory.build();
       const signInSpy = jest
         .spyOn(service, 'signIn')
@@ -68,6 +53,4 @@ describe('AuthController', () => {
       expect(signedUpUser).toEqual(mockedUser);
     });
   });
-
-  // TODO implement tests
 });

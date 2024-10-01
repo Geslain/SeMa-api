@@ -1,12 +1,3 @@
-import { IsNotEmpty } from 'class-validator';
-import { ApiProperty } from '@nestjs/swagger';
+import { InitializeUserDto } from '../../users/dto/initialize-user.dto';
 
-export class SignInDto {
-  @IsNotEmpty()
-  @ApiProperty()
-  email!: string;
-
-  @IsNotEmpty()
-  @ApiProperty()
-  password!: string;
-}
+export class SignInDto extends InitializeUserDto {}

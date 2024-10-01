@@ -1,7 +1,6 @@
 import { faker } from '@faker-js/faker';
 import * as request from 'supertest';
 
-import { User } from '../src/users/entities/user.entity';
 import { usersDtoFactory } from '../src/users/factories/users.factory';
 
 describe('User (e2e)', () => {
@@ -37,10 +36,10 @@ describe('User (e2e)', () => {
     });
 
     it('/users/:id (PATCH)', async () => {
-      const { password, ...updatedUserParams } = usersDtoFactory.build();
+      const { ...updatedUserParams } = usersDtoFactory.build();
       const response = await request(global.app.getHttpServer())
         .patch(`/users/${user.id}`)
-        .send({ password, ...updatedUserParams });
+        .send(updatedUserParams);
 
       expect(response.status).toBe(200);
       expect(response.body).toMatchObject(updatedUserParams);
@@ -123,7 +122,6 @@ describe('User (e2e)', () => {
     ['post', 'patch'].forEach((protocol) => {
       describe(`/users (${protocol.toUpperCase()})`, () => {
         let url: string;
-        let user: User;
         if (protocol === 'patch') {
           beforeEach(async () => {
             const response = await request(global.app.getHttpServer())
@@ -131,7 +129,6 @@ describe('User (e2e)', () => {
               .send(usersDtoFactory.build());
 
             url = `/users/${response.body.id}`;
-            user = response.body;
           });
 
           it('Should not update unauthorized user attributes', async () => {
@@ -144,9 +141,15 @@ describe('User (e2e)', () => {
               });
 
             const updatedUser = response.body;
+            const statusCode = response.statusCode;
 
-            expect(updatedUser.created_at).toBe(user.created_at);
-            expect(updatedUser.id).toBe(user.id);
+            expect(statusCode).toBe(400);
+            expect(updatedUser.message).toEqual(
+              expect.arrayContaining([
+                'property id should not exist',
+                'property createdAt should not exist',
+              ]),
+            );
           });
         } else {
           url = '/users/';
@@ -158,7 +161,7 @@ describe('User (e2e)', () => {
 
             expect(response.status).toBe(400);
 
-            ['firstname', 'lastname', 'email', 'password'].forEach((field) => {
+            ['firstname', 'lastname', 'email'].forEach((field) => {
               expect(response.body.message).toContain(
                 `${field} should not be empty`,
               );
@@ -200,34 +203,6 @@ describe('User (e2e)', () => {
 
             expect(response.status).toBe(400);
             expect(response.body.message).toContain(`email must be an email`);
-          });
-        });
-
-        describe('password', () => {
-          it(`Should check that password is well-formed`, async () => {
-            const badPasswordErrorMessage =
-              'Password must contain Minimum 8 and maximum 20 characters, \n    at least one uppercase letter, \n    one lowercase letter, \n    one number and \n    one special character';
-
-            const tooShortPassword = 'Sh0rt!';
-            const tooLongPassword = 'Thispasswordiswaytoolongforthesecurity1!';
-            const missingUpperCasePassword = 'foobar1!foo!';
-            const missingDigitPassword = 'Foobar!foo';
-            const missingSpecialCharPassword = 'Foobar1foo';
-
-            for (const password of [
-              tooShortPassword,
-              tooLongPassword,
-              missingUpperCasePassword,
-              missingDigitPassword,
-              missingSpecialCharPassword,
-            ]) {
-              const response = await request(global.app.getHttpServer())
-                [protocol](url)
-                .send({ password });
-
-              expect(response.status).toBe(400);
-              expect(response.body.message).toContain(badPasswordErrorMessage);
-            }
           });
         });
       });

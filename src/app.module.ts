@@ -10,12 +10,12 @@ import { FieldsModule } from './fields/fields.module';
 import { ProjectsModule } from './projects/projects.module';
 import { UsersModule } from './users/users.module';
 import { AuthModule } from './auth/auth.module';
-import { AuthGuard } from './auth/auth.guard';
 import { DataRowFieldModule } from './projects/data-row/data-row-field/data-row-field.module';
 import { DataRowModule } from './projects/data-row/data-row.module';
 import { DevicesModule } from './devices/devices.module';
 import configuration from './common/config/configuration';
 import { typeOrmAsyncConfig } from './common/datasource/datasource.constants';
+import { JwtGuard } from './auth/jwt.guard';
 
 @Module({
   imports: [
@@ -64,10 +64,10 @@ import { typeOrmAsyncConfig } from './common/datasource/datasource.constants';
   controllers: [AppController],
   providers: [
     AppService,
-    AuthGuard,
+    JwtGuard,
     {
       provide: APP_GUARD,
-      useExisting: AuthGuard,
+      useExisting: JwtGuard,
     },
   ],
 })
