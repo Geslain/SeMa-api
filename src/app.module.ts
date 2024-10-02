@@ -3,6 +3,7 @@ import { APP_GUARD, RouterModule } from '@nestjs/core';
 import { BullModule } from '@nestjs/bull';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
+import { ThrottlerGuard, ThrottlerModule } from '@nestjs/throttler';
 
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
@@ -23,6 +24,12 @@ import { JwtGuard } from './auth/jwt.guard';
       isGlobal: true,
       load: [configuration],
     }),
+    ThrottlerModule.forRoot([
+      {
+        ttl: 60000,
+        limit: 10,
+      },
+    ]),
     ConfigModule,
     TypeOrmModule.forRootAsync(typeOrmAsyncConfig),
     UsersModule,
@@ -68,6 +75,11 @@ import { JwtGuard } from './auth/jwt.guard';
     {
       provide: APP_GUARD,
       useExisting: JwtGuard,
+    },
+
+    {
+      provide: APP_GUARD,
+      useClass: ThrottlerGuard,
     },
   ],
 })
