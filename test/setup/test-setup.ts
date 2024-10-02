@@ -8,6 +8,7 @@ import { Reflector } from '@nestjs/core';
 import { Test } from '@nestjs/testing';
 import { PostgreSqlContainer } from '@testcontainers/postgresql';
 import * as request from 'supertest';
+import { ThrottlerModule } from '@nestjs/throttler';
 
 import { AppModule } from '../../src/app.module';
 import { NotFoundInterceptor } from '../../src/common/interceptors/not-found.interceptor';
@@ -24,7 +25,15 @@ module.exports = async () => {
     .start();
 
   const moduleFixture = await Test.createTestingModule({
-    imports: [AppModule],
+    imports: [
+      AppModule,
+      ThrottlerModule.forRoot([
+        {
+          ttl: 60000,
+          limit: 200,
+        },
+      ]),
+    ],
   })
     .overrideProvider(JwtGuard)
     .useClass(
