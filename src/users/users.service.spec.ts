@@ -1,6 +1,7 @@
 import { faker } from '@faker-js/faker';
 import { Test, TestingModule } from '@nestjs/testing';
 import { getRepositoryToken } from '@nestjs/typeorm';
+import { REQUEST } from '@nestjs/core';
 
 import { mockRepository } from '../common/tests/mock-repository';
 
@@ -11,7 +12,6 @@ import { UsersService } from './users.service';
 describe('UsersService', () => {
   let service: UsersService;
   const mockUserRepository = mockRepository();
-
   const usersArray = [usersFactory.build(), usersFactory.build()];
 
   beforeEach(async () => {
@@ -22,6 +22,10 @@ describe('UsersService', () => {
           provide: getRepositoryToken(User),
           useValue: mockUserRepository,
         },
+        {
+          provide: REQUEST,
+          useValue: {},
+        },
       ],
     }).compile();
 
@@ -30,6 +34,7 @@ describe('UsersService', () => {
 
   afterEach(() => {
     jest.clearAllMocks();
+    jest.resetAllMocks();
   });
 
   it('should be defined', () => {
@@ -118,6 +123,55 @@ describe('UsersService', () => {
       expect(updatedUser.lastname).toEqual(mockedUserDto.lastname);
       expect(updatedUser.email).toEqual(mockedUserDto.email);
       expect(updatedUser.id).toEqual(userId);
+    });
+  });
+
+  describe('updateCurrent()', () => {
+    it('Should not return anything', async () => {
+      const updateDTO = usersDtoFactory.build();
+      const result = await service.updateCurrent(updateDTO);
+
+      expect(result).toBeUndefined();
+    });
+
+    it('Should update user', async () => {
+      const updateDTO = usersDtoFactory.build();
+      const mockedUser = usersFactory.build();
+
+      const mockRequest = {
+        user: {
+          username: 'foo',
+        },
+      };
+
+      const module: TestingModule = await Test.createTestingModule({
+        providers: [
+          UsersService,
+          {
+            provide: getRepositoryToken(User),
+            useValue: mockUserRepository,
+          },
+          {
+            provide: REQUEST,
+            useValue: mockRequest,
+          },
+        ],
+      }).compile();
+
+      const tempService = module.get<UsersService>(UsersService);
+      const findSpy = jest
+        .spyOn(tempService, 'findOneByEmail')
+        .mockResolvedValue(mockedUser);
+
+      const saveSpy = jest
+        .spyOn(mockUserRepository, 'save')
+        .mockImplementation((u) => u);
+
+      const result = await tempService.updateCurrent(updateDTO);
+      expect(findSpy).toHaveBeenCalledWith(mockRequest.user.username);
+      expect(saveSpy).toHaveBeenCalled();
+      expect(result.firstname).toBe(updateDTO.firstname);
+      expect(result.lastname).toBe(updateDTO.lastname);
     });
   });
 

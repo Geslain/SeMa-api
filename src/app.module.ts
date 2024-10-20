@@ -1,4 +1,4 @@
-import { Module } from '@nestjs/common';
+import { Module, Scope } from '@nestjs/common';
 import { APP_GUARD, RouterModule } from '@nestjs/core';
 import { BullModule } from '@nestjs/bull';
 import { ConfigModule, ConfigService } from '@nestjs/config';
@@ -71,15 +71,14 @@ import { JwtGuard } from './auth/jwt.guard';
   controllers: [AppController],
   providers: [
     AppService,
-    JwtGuard,
-    {
-      provide: APP_GUARD,
-      useExisting: JwtGuard,
-    },
-
     {
       provide: APP_GUARD,
       useClass: ThrottlerGuard,
+    },
+    {
+      provide: APP_GUARD,
+      scope: Scope.REQUEST,
+      useClass: JwtGuard,
     },
   ],
 })

@@ -12,6 +12,7 @@ describe('UsersController', () => {
     findAll: jest.fn(),
     create: jest.fn(),
     update: jest.fn(),
+    updateCurrent: jest.fn(),
     findOne: jest.fn(),
     remove: jest.fn(),
   };
@@ -45,6 +46,20 @@ describe('UsersController', () => {
 
       const user = await controller.create(createUserDto);
       expect(createSpy).toHaveBeenCalledWith(createUserDto);
+      expect(user).toEqual(mockedUser);
+    });
+  });
+
+  describe('updateCurrent()', () => {
+    it('should update an user', async () => {
+      const mockedUser = usersFactory.build();
+      const updateUserDto = usersDtoFactory.build();
+      const updateSpy = jest
+        .spyOn(service, 'updateCurrent')
+        .mockResolvedValueOnce(mockedUser);
+
+      const user = await controller.updateCurrentUser(updateUserDto);
+      expect(updateSpy).toHaveBeenCalledWith(updateUserDto);
       expect(user).toEqual(mockedUser);
     });
   });

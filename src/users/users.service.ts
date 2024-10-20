@@ -1,16 +1,19 @@
-import { Injectable } from '@nestjs/common';
+import { Inject, Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
+import { REQUEST } from '@nestjs/core';
 
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { User } from './entities/user.entity';
 import { InitializeUserDto } from './dto/initialize-user.dto';
+import { UpdateCurrentUserDto } from './dto/update-current-user.dto';
 
 @Injectable()
 export class UsersService {
   constructor(
     @InjectRepository(User) private userRepository: Repository<User>,
+    @Inject(REQUEST) protected readonly request: Request,
   ) {}
 
   initialize(initializeUserDto: InitializeUserDto) {
@@ -52,6 +55,20 @@ export class UsersService {
     });
 
     return this.userRepository.save(user);
+  }
+
+  async updateCurrent(updateCurrentUserDto: UpdateCurrentUserDto) {
+    if ('user' in this.request && this.request.user) {
+      const { username } = this.request.user as { username: string };
+
+      const user = await this.findOneByEmail(username);
+
+      Object.entries(updateCurrentUserDto).forEach(([key, value]) => {
+        if (typeof value !== 'undefined') user[key] = value;
+      });
+
+      return this.userRepository.save(user);
+    }
   }
 
   async remove(id: string) {

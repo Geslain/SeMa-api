@@ -21,6 +21,7 @@ import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { User } from './entities/user.entity';
 import { UsersService } from './users.service';
+import { UpdateCurrentUserDto } from './dto/update-current-user.dto';
 
 @ApiBearerAuth()
 @ApiTags('users')
@@ -62,6 +63,17 @@ export class UsersController {
   }
 
   @UserUpdate()
+  @Patch('me')
+  @ApiOperation({ summary: 'Update current user' })
+  @ApiResponse({
+    status: 200,
+    description: 'Updated current user',
+    type: User,
+  })
+  updateCurrentUser(@Body() updateCurrentUserDto: UpdateCurrentUserDto) {
+    return this.usersService.updateCurrent(updateCurrentUserDto);
+  }
+
   @Patch(':id')
   @ApiOperation({ summary: 'Update an user' })
   @ApiResponse({
