@@ -1,5 +1,4 @@
 import {
-  CanActivate,
   ClassSerializerInterceptor,
   ExecutionContext,
   ValidationPipe,
@@ -9,6 +8,7 @@ import { Test } from '@nestjs/testing';
 import { PostgreSqlContainer } from '@testcontainers/postgresql';
 import * as request from 'supertest';
 import { ThrottlerModule } from '@nestjs/throttler';
+import { AuthGuard } from '@nestjs/passport';
 
 import { AppModule } from '../../src/app.module';
 import { NotFoundInterceptor } from '../../src/common/interceptors/not-found.interceptor';
@@ -17,6 +17,15 @@ import { JwtGuard } from '../../src/auth/jwt.guard';
 
 module.exports = async () => {
   const user = usersFactory.build();
+
+  class AuthGuardMock extends AuthGuard('jwt') {
+    async canActivate(context: ExecutionContext) {
+      const req = context.switchToHttp().getRequest();
+      req.user = { username: user.email }; // Your user object
+      return true;
+    }
+  }
+
   global.pg = await new PostgreSqlContainer('postgres:latest')
     .withExposedPorts({ container: 5432, host: 55044 })
     .withDatabase(process.env.DATABASE_NAME)
@@ -36,15 +45,7 @@ module.exports = async () => {
     ],
   })
     .overrideProvider(JwtGuard)
-    .useClass(
-      class AuthGuardMock implements CanActivate {
-        async canActivate(context: ExecutionContext) {
-          const req = context.switchToHttp().getRequest();
-          req.user = { username: user.email }; // Your user object
-          return true;
-        }
-      },
-    )
+    .useClass(AuthGuardMock)
     .compile();
 
   const app = moduleFixture.createNestApplication();

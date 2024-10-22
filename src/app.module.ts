@@ -71,14 +71,15 @@ import { JwtGuard } from './auth/jwt.guard';
   controllers: [AppController],
   providers: [
     AppService,
-    {
-      provide: APP_GUARD,
-      useClass: ThrottlerGuard,
-    },
+    JwtGuard,
     {
       provide: APP_GUARD,
       scope: Scope.REQUEST,
-      useClass: JwtGuard,
+      useExisting: JwtGuard,
+    },
+    {
+      provide: APP_GUARD,
+      useClass: ThrottlerGuard,
     },
   ],
 })
