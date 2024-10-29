@@ -198,11 +198,11 @@ describe('Field (e2e)', () => {
           it(`Should check that type is enum value`, async () => {
             const response = await request(global.app.getHttpServer())
               [protocol](url)
-              .send({ type: 'wrong_type' });
+              .send({ name: ' foo', type: 'wrong_type' });
 
             expect(response.status).toBe(400);
             expect(response.body.message).toContain(
-              'type must be one of the following values: text, date, list',
+              'type must be one of the following values: text, phone, date, list',
             );
 
             for (const [, value] of Object.entries(FieldType)) {
