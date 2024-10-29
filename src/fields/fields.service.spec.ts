@@ -8,8 +8,9 @@ import { UsersService } from '../users/users.service';
 import { mockRepository } from '../common/tests/mock-repository';
 
 import { fieldsDtoFactory, fieldsFactory } from './factories/fields.factory';
-import { Field } from './entities/field.entity';
+import { Field, FieldType } from './entities/field.entity';
 import { FieldsService } from './fields.service';
+import { BadFieldValueException } from './fields.error';
 
 describe('FieldsService', () => {
   let service: FieldsService;
@@ -44,7 +45,7 @@ describe('FieldsService', () => {
 
     getOwner = jest
       .spyOn(FieldsService.prototype as any, 'getOwner')
-      .mockResolvedValue(Promise.resolve(owner));
+      .mockResolvedValue(owner);
   });
 
   afterEach(() => {
@@ -213,6 +214,185 @@ describe('FieldsService', () => {
         owner: { id: owner.id },
       });
       expect(removedField).toEqual(null);
+    });
+  });
+
+  describe('validate', () => {
+    describe('Phone validation', () => {
+      const fieldId = faker.string.uuid();
+      const mockedField = fieldsFactory.build({
+        id: fieldId,
+        type: FieldType.PHONE,
+      });
+      let findOneSpy;
+
+      beforeEach(() => {
+        findOneSpy = jest
+          .spyOn(service, 'findOne')
+          .mockResolvedValue(mockedField);
+      });
+
+      afterEach(() => {
+        jest.clearAllMocks();
+        jest.resetAllMocks();
+      });
+
+      it('should return true', async () => {
+        const phoneNumbers = [
+          faker.phone.number({ style: 'national' }),
+          faker.phone.number({ style: 'international' }),
+          faker.phone.number({ style: 'national' }),
+          faker.phone.number({ style: 'international' }),
+        ];
+
+        const result = await Promise.all(
+          phoneNumbers.map((value) => {
+            return service.validate(fieldId, value);
+          }),
+        );
+
+        expect(result.every((v) => v)).toEqual(true);
+        expect(findOneSpy).toHaveBeenNthCalledWith(4, fieldId);
+      });
+
+      it('should throw exception', async () => {
+        for (const value of ['bad phone', 98976567866, '+33']) {
+          await expect(service.validate(fieldId, value)).rejects.toThrow(
+            new BadFieldValueException('should be a valid phone number'),
+          );
+        }
+      });
+    });
+
+    describe('Text validation', () => {
+      const fieldId = faker.string.uuid();
+      const mockedField = fieldsFactory.build({
+        id: fieldId,
+        type: FieldType.TEXT,
+      });
+      let findOneSpy;
+
+      beforeEach(() => {
+        findOneSpy = jest
+          .spyOn(service, 'findOne')
+          .mockResolvedValue(mockedField);
+      });
+
+      afterEach(() => {
+        jest.clearAllMocks();
+        jest.resetAllMocks();
+      });
+
+      it('should return true', async () => {
+        const phoneNumbers = ['foo'];
+
+        const result = await Promise.all(
+          phoneNumbers.map((value) => {
+            return service.validate(fieldId, value);
+          }),
+        );
+
+        expect(result.every((v) => v)).toEqual(true);
+        expect(findOneSpy).toHaveBeenNthCalledWith(1, fieldId);
+      });
+
+      it('should throw exception', async () => {
+        for (const value of [345678, [], {}]) {
+          await expect(service.validate(fieldId, value)).rejects.toThrow(
+            new BadFieldValueException('should be a string'),
+          );
+        }
+      });
+    });
+
+    describe('List validation', () => {
+      const fieldId = faker.string.uuid();
+      const mockedField = fieldsFactory.build({
+        id: fieldId,
+        type: FieldType.LIST,
+        values: ['blue', 'red', 'pink'],
+      });
+      let findOneSpy;
+
+      beforeEach(() => {
+        findOneSpy = jest
+          .spyOn(service, 'findOne')
+          .mockResolvedValue(mockedField);
+      });
+
+      afterEach(() => {
+        jest.clearAllMocks();
+        jest.resetAllMocks();
+      });
+
+      it('should return true', async () => {
+        const phoneNumbers = ['blue', 'red', 'pink'];
+
+        const result = await Promise.all(
+          phoneNumbers.map((value) => {
+            return service.validate(fieldId, value);
+          }),
+        );
+
+        expect(result.every((v) => v)).toEqual(true);
+        expect(findOneSpy).toHaveBeenNthCalledWith(1, fieldId);
+      });
+
+      it('should throw exception', async () => {
+        for (const value of [345678, 'reed', 'green']) {
+          await expect(service.validate(fieldId, value)).rejects.toThrow(
+            new BadFieldValueException(
+              `should be listed in ${mockedField.name} (${mockedField.values.join(',')})`,
+            ),
+          );
+        }
+      });
+    });
+
+    describe('Date validation', () => {
+      const fieldId = faker.string.uuid();
+      const mockedField = fieldsFactory.build({
+        id: fieldId,
+        type: FieldType.DATE,
+      });
+      let findOneSpy;
+
+      beforeEach(() => {
+        findOneSpy = jest
+          .spyOn(service, 'findOne')
+          .mockResolvedValue(mockedField);
+      });
+
+      afterEach(() => {
+        jest.clearAllMocks();
+        jest.resetAllMocks();
+      });
+
+      it('should return true', async () => {
+        const phoneNumbers = [
+          '1994-12-04',
+          new Date(),
+          faker.date.soon(),
+          faker.date.anytime(),
+        ];
+
+        const result = await Promise.all(
+          phoneNumbers.map((value) => {
+            return service.validate(fieldId, value);
+          }),
+        );
+
+        expect(result.every((v) => v)).toEqual(true);
+        expect(findOneSpy).toHaveBeenNthCalledWith(2, fieldId);
+      });
+
+      it('should throw exception', async () => {
+        for (const value of [123873287287, '2001-31-12', 'Monday']) {
+          await expect(service.validate(fieldId, value)).rejects.toThrow(
+            new BadFieldValueException('should be a date'),
+          );
+        }
+      });
     });
   });
 });

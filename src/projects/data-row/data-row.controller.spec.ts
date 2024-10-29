@@ -7,6 +7,7 @@ import {
 } from './factories/data-rows.factory';
 import { DataRowController } from './data-row.controller';
 import { DataRowService } from './data-row.service';
+import { DataRowFieldValueValidator } from './data-row-field-value-validator.pipe';
 
 describe('DataRowController', () => {
   let controller: DataRowController;
@@ -22,9 +23,13 @@ describe('DataRowController', () => {
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
+      imports: [],
       controllers: [DataRowController],
       providers: [{ provide: DataRowService, useValue: mockedDataRowService }],
-    }).compile();
+    })
+      .overridePipe(DataRowFieldValueValidator)
+      .useValue(DataRowFieldValueValidator)
+      .compile();
 
     controller = module.get<DataRowController>(DataRowController);
     service = module.get<DataRowService>(DataRowService);

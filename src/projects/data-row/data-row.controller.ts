@@ -7,17 +7,20 @@ import {
   ParseUUIDPipe,
   Patch,
   Post,
+  UsePipes,
 } from '@nestjs/common';
 
 import { DataRowService } from './data-row.service';
 import { CreateDataRowDto } from './dto/create-data-row.dto';
 import { UpdateDataRowDto } from './dto/update-data-row.dto';
+import { DataRowFieldValueValidator } from './data-row-field-value-validator.pipe';
 
 @Controller()
 export class DataRowController {
   constructor(private readonly dataRowService: DataRowService) {}
 
   @Post()
+  @UsePipes(DataRowFieldValueValidator)
   create(
     @Param('projectId', ParseUUIDPipe) projectId: string,
     @Body() createDataRowDto: CreateDataRowDto,
@@ -39,6 +42,7 @@ export class DataRowController {
   }
 
   @Patch(':id')
+  @UsePipes(DataRowFieldValueValidator)
   update(
     @Param('projectId', ParseUUIDPipe) projectId: string,
     @Param('id', ParseUUIDPipe) id: string,

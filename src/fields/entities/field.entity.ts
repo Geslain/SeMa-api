@@ -6,6 +6,7 @@ import { BaseEntity } from '../../common/base-entity/base-entity.entity';
 
 export enum FieldType {
   TEXT = 'text',
+  PHONE = 'phone',
   DATE = 'date',
   LIST = 'list',
 }
