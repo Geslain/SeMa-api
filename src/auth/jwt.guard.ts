@@ -5,7 +5,7 @@ import { ExecutionContext, Injectable, Logger } from '@nestjs/common';
 import { UsersService } from '../users/users.service';
 import { InvalidUserException } from '../common/errors';
 
-import { IS_PUBLIC_KEY } from './decorator/public.decorator';
+import { IS_LOGIN_KEY } from './decorator/is-login.decorator';
 import { IS_USER_UPDATE_KEY } from './decorator/user-update.decorator';
 
 @Injectable()
@@ -37,7 +37,7 @@ export class JwtGuard extends AuthGuard('jwt') {
   }
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
-    const isPublic = this.reflector.getAllAndOverride<boolean>(IS_PUBLIC_KEY, [
+    const isLogin = this.reflector.getAllAndOverride<boolean>(IS_LOGIN_KEY, [
       context.getHandler(),
       context.getClass(),
     ]);
@@ -47,15 +47,14 @@ export class JwtGuard extends AuthGuard('jwt') {
       [context.getHandler(), context.getClass()],
     );
 
-    if (isPublic) {
-      return true;
-    }
-
     const baseGuardResult = await super.canActivate(context);
-
     const request = context.switchToHttp().getRequest();
 
     request.user.username = request.user['https://sema.com'];
+
+    if (isLogin) {
+      return !!baseGuardResult;
+    }
 
     const user = await this.userService.findOneByEmail(request.user.username);
 

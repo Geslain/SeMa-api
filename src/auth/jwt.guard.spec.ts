@@ -12,6 +12,7 @@ import { InvalidUserException } from '../common/errors';
 import { JwtGuard } from './jwt.guard';
 import { JwtStrategy } from './jwt.strategy';
 import { IS_USER_UPDATE_KEY } from './decorator/user-update.decorator';
+import { IS_LOGIN_KEY } from './decorator/is-login.decorator';
 
 describe('JwtGuard', () => {
   let jwtGuard: JwtGuard;
@@ -31,15 +32,29 @@ describe('JwtGuard', () => {
     getClass: jest.fn(),
   };
 
-  const mockReflector = {
-    getAllAndOverride: jest.fn((_key): boolean => _key && false),
-  };
-
   const mockUsersService = {
     findOneByEmail: jest.fn(),
   };
 
   const mockUserEmail = faker.internet.email();
+
+  const mockReflector = {
+    getAllAndOverride: jest.fn((_key): boolean => _key && false),
+  };
+  const mockAuthenticate = jest.fn(function (t) {
+    t.success({ 'https://sema.com': mockUserEmail });
+  });
+
+  const mockStrategy = class MockJWTStrategy extends PassportStrategy(
+    Strategy,
+  ) {
+    constructor() {
+      super({ secretOrKey: 'foo', jwtFromRequest: () => 'bar' });
+    }
+    authenticate() {
+      return mockAuthenticate(this);
+    }
+  };
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
@@ -48,14 +63,7 @@ describe('JwtGuard', () => {
         JwtGuard,
         {
           provide: JwtStrategy,
-          useClass: class MockJWTStrategy extends PassportStrategy(Strategy) {
-            constructor() {
-              super({ secretOrKey: 'foo', jwtFromRequest: () => 'bar' });
-            }
-            authenticate() {
-              this.success({ 'https://sema.com': mockUserEmail });
-            }
-          },
+          useClass: mockStrategy,
         },
         {
           provide: Reflector,
@@ -74,19 +82,50 @@ describe('JwtGuard', () => {
 
   afterEach(() => {
     jest.clearAllMocks();
-    jest.restoreAllMocks();
   });
 
   describe('canActivate()', () => {
-    it('Should authorize when public', async () => {
-      mockReflector.getAllAndOverride.mockReturnValueOnce(true);
+    describe('Login', () => {
+      jest
+        .spyOn(mockReflector, 'getAllAndOverride')
+        .mockImplementationOnce((metadataKey) => metadataKey === IS_LOGIN_KEY);
 
-      const returnValue = await jwtGuard.canActivate(
-        mockExecutionContext as ExecutionContext,
-      );
+      it('Should return true', async () => {
+        const returnValue = await jwtGuard.canActivate(
+          mockExecutionContext as ExecutionContext,
+        );
 
-      expect(mockReflector.getAllAndOverride).toHaveBeenCalled();
-      expect(returnValue).toEqual(true);
+        expect(mockReflector.getAllAndOverride).toHaveBeenCalledWith(
+          IS_LOGIN_KEY,
+          [mockExecutionContext.getHandler(), mockExecutionContext.getClass()],
+        );
+        expect(mockReflector.getAllAndOverride).toHaveBeenCalledWith(
+          IS_USER_UPDATE_KEY,
+          [mockExecutionContext.getHandler(), mockExecutionContext.getClass()],
+        );
+        expect(returnValue).toEqual(true);
+        expect(mockUsersService.findOneByEmail).not.toHaveBeenCalled();
+      });
+
+      it('Should return false', async () => {
+        mockAuthenticate.mockImplementationOnce((t) => {
+          t.fail();
+        });
+
+        await expect(
+          jwtGuard.canActivate(mockExecutionContext as ExecutionContext),
+        ).rejects.toThrow(new Error('Unauthorized'));
+
+        expect(mockReflector.getAllAndOverride).toHaveBeenCalledWith(
+          IS_LOGIN_KEY,
+          [mockExecutionContext.getHandler(), mockExecutionContext.getClass()],
+        );
+        expect(mockReflector.getAllAndOverride).toHaveBeenCalledWith(
+          IS_USER_UPDATE_KEY,
+          [mockExecutionContext.getHandler(), mockExecutionContext.getClass()],
+        );
+        expect(mockUsersService.findOneByEmail).not.toHaveBeenCalled();
+      });
     });
 
     it('Should authorize user', async () => {
@@ -94,7 +133,7 @@ describe('JwtGuard', () => {
 
       const findOneByEmailSpy = jest
         .spyOn(mockUsersService, 'findOneByEmail')
-        .mockImplementation(() => Promise.resolve(mockedUser));
+        .mockImplementationOnce(() => Promise.resolve(mockedUser));
 
       const returnValue = await jwtGuard.canActivate(
         mockExecutionContext as ExecutionContext,
@@ -107,7 +146,7 @@ describe('JwtGuard', () => {
     it('Should not authorize user', async () => {
       const findOneByEmailSpy = jest
         .spyOn(mockUsersService, 'findOneByEmail')
-        .mockImplementation(() => Promise.resolve(null));
+        .mockImplementationOnce(() => Promise.resolve(null));
 
       const returnValue = await jwtGuard.canActivate(
         mockExecutionContext as ExecutionContext,
@@ -122,7 +161,7 @@ describe('JwtGuard', () => {
 
       const findOneByEmailSpy = jest
         .spyOn(mockUsersService, 'findOneByEmail')
-        .mockImplementation(() => Promise.resolve(mockedUser));
+        .mockImplementationOnce(() => Promise.resolve(mockedUser));
 
       await expect(
         jwtGuard.canActivate(mockExecutionContext as ExecutionContext),
@@ -131,16 +170,16 @@ describe('JwtGuard', () => {
     });
 
     it('Should allow user to update info', async () => {
-      const mockedUser = usersFactory.build({ firstname: '' });
+      const mockedUser = usersFactory.build();
 
       // Mock that user is on PATCH /users/:id route
-      mockReflector.getAllAndOverride.mockImplementation(
+      mockReflector.getAllAndOverride.mockImplementationOnce(
         (key) => key === IS_USER_UPDATE_KEY,
       );
 
       const findOneByEmailSpy = jest
         .spyOn(mockUsersService, 'findOneByEmail')
-        .mockImplementation(() => Promise.resolve(mockedUser));
+        .mockImplementationOnce(() => Promise.resolve(mockedUser));
 
       const returnValue = await jwtGuard.canActivate(
         mockExecutionContext as ExecutionContext,
