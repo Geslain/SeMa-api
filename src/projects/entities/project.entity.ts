@@ -33,6 +33,7 @@ export class Project extends BaseEntity {
   )
   dataRows: DataRow[];
 
+  // TODO: transform this into a Many To one with custom join table to have timestamps
   @ManyToMany(/* istanbul ignore next */ () => Field)
   @JoinTable()
   fields: Field[];
