@@ -24,6 +24,15 @@ export class UsersService {
     return this.userRepository.save(user);
   }
 
+  async getCurrent() {
+    if ('user' in this.request && this.request.user) {
+      const { username } = this.request.user as { username: string };
+
+      return await this.findOneByEmail(username);
+    }
+    return null;
+  }
+
   create(createUserDto: CreateUserDto) {
     const user = new User();
 
@@ -58,16 +67,13 @@ export class UsersService {
   }
 
   async updateCurrent(updateCurrentUserDto: UpdateCurrentUserDto) {
-    if ('user' in this.request && this.request.user) {
-      const { username } = this.request.user as { username: string };
-
-      const user = await this.findOneByEmail(username);
-
+    const currentUser = await this.getCurrent();
+    if (currentUser) {
       Object.entries(updateCurrentUserDto).forEach(([key, value]) => {
-        if (typeof value !== 'undefined') user[key] = value;
+        if (typeof value !== 'undefined') currentUser[key] = value;
       });
 
-      return this.userRepository.save(user);
+      return this.userRepository.save(currentUser);
     }
   }
 
