@@ -1,3 +1,4 @@
+/* istanbul ignore next */
 export default () => ({
   env: process.env.NODE_ENV || 'development',
   port: 3000,
