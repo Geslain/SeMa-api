@@ -3,7 +3,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { REQUEST } from '@nestjs/core';
 
-import { WithOwnerService } from '../common/WithOwnerService';
+import { WithOwnerService } from '../common/with-owner.service';
 import { UsersService } from '../users/users.service';
 
 import { CreateDeviceDto } from './dto/create-device.dto';

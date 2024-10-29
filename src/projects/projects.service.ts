@@ -6,7 +6,7 @@ import { InjectQueue } from '@nestjs/bull';
 import { Queue } from 'bull';
 
 import { UsersService } from '../users/users.service';
-import { WithOwnerService } from '../common/WithOwnerService';
+import { WithOwnerService } from '../common/with-owner.service';
 import { FieldsService } from '../fields/fields.service';
 import { DevicesService } from '../devices/devices.service';
 
